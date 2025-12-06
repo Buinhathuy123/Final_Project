@@ -1,0 +1,125 @@
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:background="#FFFFFF"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <ScrollView
+        android:id="@+id/rcqenx3a2qo7"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:background="@drawable/cr40bf5ede0">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="vertical">
+
+            <!-- TOP AVATAR + NOTIFICATION -->
+            <LinearLayout
+                android:id="@+id/rgkol9qdyhyd"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="24dp"
+                android:layout_marginBottom="19dp"
+                android:layout_marginStart="24dp"
+                android:layout_marginEnd="9dp"
+                android:orientation="horizontal">
+
+                <ImageView
+                    android:id="@+id/rz87qcoz2k5"
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:src="@drawable/avatar"
+                    android:scaleType="fitXY" />
+
+                <View
+                    android:layout_width="0dp"
+                    android:layout_height="0dp"
+                    android:layout_weight="1"/>
+
+                <ImageView
+                    android:id="@+id/r08svs0jm4lqr"
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:src="@drawable/chuong"
+                    android:scaleType="fitXY"/>
+            </LinearLayout>
+
+            <!-- MENU ICON -->
+            <LinearLayout
+                android:id="@+id/r4pza1vyo184"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="end"
+                android:layout_marginBottom="84dp"
+                android:orientation="vertical">
+
+                <com.google.android.material.imageview.ShapeableImageView
+                    android:id="@+id/rcga16tpg4bp"
+                    app:shapeAppearanceOverlay="@style/cr40"
+                    android:layout_width="60dp"
+                    android:layout_height="60dp"
+                    android:layout_marginEnd="11dp"
+                    android:src="@drawable/Menu"
+                    android:scaleType="fitXY"/>
+            </LinearLayout>
+
+            <!-- TITLE -->
+            <TextView
+                android:id="@+id/r1bf5bw1x23t"
+                android:textColor="#4A4A4A"
+                android:textSize="36sp"
+                android:layout_marginBottom="37dp"
+                android:layout_marginStart="26dp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Lịch sử đánh giá bằng hình ảnh" />
+
+            <!-- LISTVIEW -->
+            <ListView
+                android:id="@+id/listHistoryImage"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:divider="@android:color/transparent"
+                android:dividerHeight="20dp"
+                android:paddingStart="27dp"
+                android:paddingEnd="27dp"
+                android:layout_marginBottom="80dp"/>
+
+            <!-- BUTTON TRANG CHỦ CĂN GIỮA -->
+            <LinearLayout
+                android:id="@+id/ri1413cjfdqs"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:layout_marginBottom="120dp"
+                android:orientation="vertical">
+
+                <LinearLayout
+                    android:id="@+id/r44lmbih4x4r"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:background="@drawable/cr10b7fa7b5"
+                    android:paddingHorizontal="60dp"
+                    android:paddingVertical="23dp"
+                    android:clickable="true"
+                    android:focusable="true">
+
+                    <TextView
+                        android:id="@+id/rxh2ge01k44"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Trang chủ"
+                        android:textColor="#4A4A4A"
+                        android:textSize="16sp"/>
+                </LinearLayout>
+            </LinearLayout>
+
+        </LinearLayout>
+    </ScrollView>
+</LinearLayout>

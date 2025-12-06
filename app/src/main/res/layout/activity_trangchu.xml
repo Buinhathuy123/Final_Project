@@ -1,0 +1,239 @@
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:background="#FFFFFF"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+    <ScrollView
+        android:id="@+id/r7xgp4jlv5i3"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:background="@drawable/cr40bf5ede0">
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="vertical">
+            <LinearLayout
+                android:id="@+id/rz4c3oicw8t"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="24dp"
+                android:layout_marginBottom="16dp"
+                android:layout_marginStart="24dp"
+                android:layout_marginEnd="9dp"
+                android:orientation="horizontal">
+                <!-- Avatar -->
+                <ImageView
+                    android:id="@+id/rlo38y9hn3q9"
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:src="@drawable/avatar"
+                    android:adjustViewBounds="true"
+                    android:scaleType="fitCenter"
+                    />
+                <View
+                    android:layout_width="0dp"
+                    android:layout_height="0dp"
+                    android:layout_weight="1"
+                    />
+                <ImageView
+                    android:id="@+id/rcmbxr67d7we"
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:src="@drawable/chuong"
+                    android:adjustViewBounds="true"
+                    android:scaleType="fitCenter"
+                    />
+            </LinearLayout>
+            <LinearLayout
+                android:id="@+id/rz502f0lllw"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center_vertical"
+                android:layout_marginBottom="76dp"
+                android:layout_marginStart="24dp"
+                android:layout_marginEnd="11dp"
+                android:orientation="horizontal">
+                <TextView
+                    android:id="@+id/r0qnyj702h7yf"
+                    android:textColor="#4A4A4A"
+                    android:textSize="40sp"
+                    android:layout_height="wrap_content"
+                    android:layout_width="wrap_content"
+                    android:text="Hi, Tetiana!"
+                    />
+                <View
+                    android:layout_width="0dp"
+                    android:layout_height="0dp"
+                    android:layout_weight="1"
+                    />
+                <com.google.android.material.imageview.ShapeableImageView
+                    android:id="@+id/rl0xxrilaeu"
+                    app:shapeAppearanceOverlay="@style/cr40"
+                    android:layout_width="60dp"
+                    android:layout_height="60dp"
+                    android:src="@drawable/Menu"
+                    android:adjustViewBounds="true"
+                    android:scaleType="fitCenter"
+                    />
+            </LinearLayout>
+            <TextView
+                android:id="@+id/r54pgkif3i7k"
+                android:textColor="#4A4A4A"
+                android:textSize="20sp"
+                android:layout_marginBottom="75dp"
+                android:layout_marginStart="25dp"
+                android:layout_height="wrap_content"
+                android:layout_width="wrap_content"
+                android:text="Hôm nay bạn cảm thấy thế nào?"
+                />
+            <LinearLayout
+                android:id="@+id/rf3nf068k2tw"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@drawable/cr20b7fa7b5"
+                android:paddingVertical="70dp"
+                android:paddingHorizontal="15dp"
+                android:layout_marginBottom="189dp"
+                android:layout_marginHorizontal="39dp"
+                android:orientation="vertical">
+                <TextView
+                    android:id="@+id/r2avy2tx9fkx"
+                    android:textColor="#FFFFFF"
+                    android:textSize="20sp"
+                    android:textStyle="bold"
+                    android:layout_height="wrap_content"
+                    android:layout_width="match_parent"
+                    android:layout_weight="1"
+                    android:text="Mức độ trầm cảm gần nhất:\nTrung bình"
+                    />
+            </LinearLayout>
+
+
+            <!-- Icon bar: Căn chỉnh lại bằng 4 View có weight=1 để chia đều khoảng trống -->
+            <LinearLayout
+                android:id="@+id/rl6zsog6uhdl"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center_vertical"
+                android:background="@drawable/cr40b7fa7b5"
+                android:paddingVertical="11dp"
+                android:layout_marginBottom="11dp"
+                android:layout_marginHorizontal="47dp"
+                android:orientation="horizontal">
+
+                <!-- Space 1 (Left padding) -->
+                <View
+                    android:id="@+id/space_left"
+                    android:layout_width="0dp"
+                    android:layout_height="1dp"
+                    android:layout_weight="1"
+                    />
+
+                <!-- Mic (Đổi sang ImageView cơ bản để kiểm tra lỗi ShapeableImageView) -->
+                <ImageView
+                    android:id="@+id/rs2b3avbvv8r"
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:src="@drawable/Mic"
+                    android:scaleType="fitCenter"
+                    />
+
+                <!-- Space 2 (Center left) -->
+                <View
+                    android:id="@+id/space_mic_image"
+                    android:layout_width="0dp"
+                    android:layout_height="1dp"
+                    android:layout_weight="1"
+                    />
+
+                <!-- Image (Đổi sang ImageView cơ bản) -->
+                <ImageView
+                    android:id="@+id/ru6zfpw7qpd"
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:src="@drawable/Image"
+                    android:scaleType="fitCenter"
+                    />
+
+                <!-- Space 3 (Center right) -->
+                <View
+                    android:id="@+id/space_image_text"
+                    android:layout_width="0dp"
+                    android:layout_height="1dp"
+                    android:layout_weight="1"
+                    />
+
+                <!-- Text icon (Đổi sang ImageView cơ bản) -->
+                <ImageView
+                    android:id="@+id/rxasyboop38a"
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:src="@drawable/text"
+                    android:scaleType="fitCenter"
+                    />
+
+                <!-- Space 4 (Right padding) -->
+                <View
+                    android:id="@+id/space_right"
+                    android:layout_width="0dp"
+                    android:layout_height="1dp"
+                    android:layout_weight="1"
+                    />
+            </LinearLayout>
+
+            <!-- Text labels for icons: Căn chỉnh lại khoảng cách giữa các label -->
+            <LinearLayout
+                android:id="@+id/r75jgokpyhos"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center_horizontal"
+                android:layout_marginBottom="42dp"
+                android:orientation="vertical">
+                <LinearLayout
+                    android:id="@+id/rzn2fkdmx53"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginHorizontal="47dp"
+                    android:orientation="horizontal">
+                    <!-- Text 1 (Ghi âm) -->
+                    <TextView
+                        android:id="@+id/ri4p409bj1uh"
+                        android:textColor="#4A4A4A"
+                        android:textSize="12sp"
+                        android:gravity="center"
+                        android:layout_height="wrap_content"
+                        android:layout_width="0dp"
+                        android:layout_weight="1"
+                        android:text="Ghi âm"
+                        />
+                    <!-- Text 2 (Hình ảnh) -->
+                    <TextView
+                        android:id="@+id/ruefecgsmums"
+                        android:textColor="#4A4A4A"
+                        android:textSize="12sp"
+                        android:gravity="center"
+                        android:layout_height="wrap_content"
+                        android:layout_width="0dp"
+                        android:layout_weight="1"
+                        android:text="Hình ảnh"
+                        />
+                    <!-- Text 3 (Trắc nghiệm) -->
+                    <TextView
+                        android:id="@+id/rqyb842lyp2s"
+                        android:textColor="#4A4A4A"
+                        android:textSize="12sp"
+                        android:gravity="center"
+                        android:layout_height="wrap_content"
+                        android:layout_width="0dp"
+                        android:layout_weight="1"
+                        android:text="Trắc nghiệm"
+                        />
+                </LinearLayout>
+            </LinearLayout>
+        </LinearLayout>
+    </ScrollView>
+</LinearLayout>
