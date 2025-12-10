@@ -71,7 +71,7 @@
                     app:shapeAppearanceOverlay="@style/cr40"
                     android:layout_width="60dp"
                     android:layout_height="60dp"
-                    android:src="@drawable/Menu"
+                    android:src="@drawable/menu"
                     android:scaleType="fitXY"
                     />
             </LinearLayout>
@@ -139,7 +139,7 @@
                 android:text="Kết quả đánh giá"
                 />
             <TextView
-                android:id="@+id/r6ot8rnii7z"
+                android:id="@+id/textketquatracnghiem"
                 android:textColor="#4A4A4A"
                 android:textSize="24sp"
                 android:textStyle="bold"
@@ -150,7 +150,7 @@
                 android:text="Trầm cảm trung bình"
                 />
             <TextView
-                android:id="@+id/rgx701hg4k7q"
+                android:id="@+id/textloikhuyentracnghiem"
                 android:textColor="#4A4A4A"
                 android:textSize="16sp"
                 android:layout_marginBottom="159dp"
@@ -170,7 +170,7 @@
                 android:text="Xem đề xuất bộ âm nhạc dành cho bạn"
                 />
             <LinearLayout
-                android:id="@+id/ro9jqpb89n6b"
+                android:id="@+id/btnketthuctracnghiem"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:gravity="center_horizontal"

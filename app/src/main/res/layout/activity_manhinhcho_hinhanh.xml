@@ -71,7 +71,7 @@
                     app:shapeAppearanceOverlay="@style/cr40"
                     android:layout_width="60dp"
                     android:layout_height="60dp"
-                    android:src="@drawable/Menu"
+                    android:src="@drawable/menu"
                     android:scaleType="fitXY"
                     />
             </LinearLayout>
@@ -103,7 +103,7 @@
                             android:id="@+id/ryhk1a6b1g7q"
                             android:layout_width="31dp"
                             android:layout_height="32dp"
-                            android:src="@drawable/Image"
+                            android:src="@drawable/image"
                             android:scaleType="fitXY"
                             />
                     </LinearLayout>

@@ -71,7 +71,7 @@
                     app:shapeAppearanceOverlay="@style/cr40"
                     android:layout_width="60dp"
                     android:layout_height="60dp"
-                    android:src="@drawable/Menu"
+                    android:src="@drawable/menu"
                     android:scaleType="fitXY"
                     />
             </LinearLayout>
@@ -97,7 +97,7 @@
                 android:text="Vui lòng chọn mức độ phù hợp nhất\nvới bạn trong 2 tuần qua"
                 />
             <LinearLayout
-                android:id="@+id/r8c8o7hc74oo"
+                android:id="@+id/fulltiendo"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:background="@drawable/cr40bd9d9d9"
@@ -105,7 +105,7 @@
                 android:layout_marginHorizontal="31dp"
                 android:orientation="vertical">
                 <LinearLayout
-                    android:id="@+id/rns5ce20l0l"
+                    android:id="@+id/thanhtiendo"
                     android:layout_width="68dp"
                     android:layout_height="3dp"
                     android:background="@drawable/cr40b9775fa"
@@ -113,7 +113,7 @@
                 </LinearLayout>
             </LinearLayout>
             <TextView
-                android:id="@+id/rb07w4xch6kb"
+                android:id="@+id/texttiendo"
                 android:textColor="#4A4A4A"
                 android:textSize="16sp"
                 android:layout_marginBottom="19dp"
@@ -123,7 +123,7 @@
                 android:text="Câu 3/9"
                 />
             <TextView
-                android:id="@+id/rjz7mkos1pn"
+                android:id="@+id/textCauHoi"
                 android:textColor="#4A4A4A"
                 android:textSize="16sp"
                 android:layout_marginBottom="58dp"
@@ -140,7 +140,7 @@
                 android:layout_marginBottom="20dp"
                 android:orientation="vertical">
                 <LinearLayout
-                    android:id="@+id/r202dxa7x33q"
+                    android:id="@+id/btnanswer1"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:gravity="center_vertical"
@@ -180,7 +180,7 @@
                     android:layout_height="wrap_content"
                     android:orientation="vertical">
                     <LinearLayout
-                        android:id="@+id/r0r1m1tjmhwt"
+                        android:id="@+id/btnanswer2"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:gravity="center_vertical"
@@ -213,7 +213,7 @@
                         android:layout_height="wrap_content"
                         android:orientation="vertical">
                         <LinearLayout
-                            android:id="@+id/rvmyfhyhscql"
+                            android:id="@+id/btnanswer3"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:gravity="center_vertical"
@@ -241,7 +241,7 @@
                                 />
                         </LinearLayout>
                         <LinearLayout
-                            android:id="@+id/r9870ypugu15"
+                            android:id="@+id/btnanswer4"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:gravity="center_vertical"
@@ -271,7 +271,7 @@
                 </LinearLayout>
             </LinearLayout>
             <LinearLayout
-                android:id="@+id/rgrw4iqpvatr"
+                android:id="@+id/btnNext"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:gravity="center_horizontal"

@@ -75,7 +75,7 @@
                     app:shapeAppearanceOverlay="@style/cr40"
                     android:layout_width="60dp"
                     android:layout_height="60dp"
-                    android:src="@drawable/Menu"
+                    android:src="@drawable/menu"
                     android:adjustViewBounds="true"
                     android:scaleType="fitCenter"
                     />
@@ -138,7 +138,7 @@
                     android:id="@+id/rs2b3avbvv8r"
                     android:layout_width="48dp"
                     android:layout_height="48dp"
-                    android:src="@drawable/Mic"
+                    android:src="@drawable/mic"
                     android:scaleType="fitCenter"
                     />
 
@@ -155,7 +155,7 @@
                     android:id="@+id/ru6zfpw7qpd"
                     android:layout_width="48dp"
                     android:layout_height="48dp"
-                    android:src="@drawable/Image"
+                    android:src="@drawable/image"
                     android:scaleType="fitCenter"
                     />
 

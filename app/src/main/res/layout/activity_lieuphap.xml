@@ -58,7 +58,7 @@
                     android:layout_width="60dp"
                     android:layout_height="60dp"
                     android:layout_marginEnd="11dp"
-                    android:src="@drawable/Menu"
+                    android:src="@drawable/menu"
                     android:scaleType="fitXY"
                     />
             </LinearLayout>
@@ -111,7 +111,7 @@
                     app:shapeAppearanceOverlay="@style/cr40"
                     android:layout_width="100dp"
                     android:layout_height="52dp"
-                    android:src="@drawable/Spoti"
+                    android:src="@drawable/spoti"
                     android:scaleType="fitXY"
                     />
             </LinearLayout>

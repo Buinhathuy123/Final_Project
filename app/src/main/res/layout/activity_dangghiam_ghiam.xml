@@ -71,7 +71,7 @@
                     app:shapeAppearanceOverlay="@style/cr40"
                     android:layout_width="60dp"
                     android:layout_height="60dp"
-                    android:src="@drawable/Menu"
+                    android:src="@drawable/menu"
                     android:scaleType="fitXY"
                     />
             </LinearLayout>
