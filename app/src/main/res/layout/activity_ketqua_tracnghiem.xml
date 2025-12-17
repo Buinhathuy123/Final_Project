@@ -160,7 +160,7 @@
                 android:text="Bạn nên trò chuyện với bác sĩ hoặc chuyên gia sức khoẻ tâm thần"
                 />
             <TextView
-                android:id="@+id/rtt1izzu8r1c"
+                android:id="@+id/textgoiyamnhac"
                 android:textColor="#C28989"
                 android:textSize="16sp"
                 android:layout_marginBottom="40dp"

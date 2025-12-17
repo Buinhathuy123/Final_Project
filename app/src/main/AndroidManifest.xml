@@ -25,9 +25,11 @@
             </intent-filter>
         </activity>
 
-        <!-- 🔥 Activity kết quả bạn cần thêm -->
         <activity
             android:name=".ui.ketqua.KetQuaTracNghiemActivity"
+            android:exported="false" />
+        <activity
+            android:name=".ui.trangchu.TrangChuActicvity"
             android:exported="false" />
 
     </application>

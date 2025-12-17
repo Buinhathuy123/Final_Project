@@ -74,7 +74,7 @@
                         android:text="BẮT ĐẦU"
                         />
                     <ImageView
-                        android:id="@+id/rr1dxvhqdd"
+                        android:id="@+id/btnbatdau"
                         android:layout_width="112dp"
                         android:layout_height="112dp"
                         android:src="@drawable/batdau"
