@@ -135,7 +135,7 @@
 
                 <!-- Mic (Đổi sang ImageView cơ bản để kiểm tra lỗi ShapeableImageView) -->
                 <ImageView
-                    android:id="@+id/rs2b3avbvv8r"
+                    android:id="@+id/btn_ghiam"
                     android:layout_width="48dp"
                     android:layout_height="48dp"
                     android:src="@drawable/mic"
@@ -152,7 +152,7 @@
 
                 <!-- Image (Đổi sang ImageView cơ bản) -->
                 <ImageView
-                    android:id="@+id/ru6zfpw7qpd"
+                    android:id="@+id/btn_hinhanh"
                     android:layout_width="48dp"
                     android:layout_height="48dp"
                     android:src="@drawable/image"
@@ -169,7 +169,7 @@
 
                 <!-- Text icon (Đổi sang ImageView cơ bản) -->
                 <ImageView
-                    android:id="@+id/rxasyboop38a"
+                    android:id="@+id/btn_tracnghiem"
                     android:layout_width="48dp"
                     android:layout_height="48dp"
                     android:src="@drawable/text"

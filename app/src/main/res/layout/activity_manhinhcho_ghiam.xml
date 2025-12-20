@@ -76,7 +76,7 @@
                     />
             </LinearLayout>
             <TextView
-                android:id="@+id/r6gcu1d8ep6w"
+                android:id="@+id/textcauhoighiam"
                 android:textColor="#4A4A4A"
                 android:textSize="20sp"
                 android:layout_marginBottom="165dp"
@@ -86,6 +86,42 @@
                 android:layout_weight="1"
                 android:text="Câu 1: Bạn có ít hứng thú hoặc niềm vui khi làm việc gì đó không?"
                 />
+            <TextView
+                android:id="@+id/txtKetQuaNoi"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginHorizontal="29dp"
+                android:layout_marginBottom="24dp"
+                android:text="Kết quả sẽ hiển thị ở đây"
+                android:textColor="#2E2E2E"
+                android:textSize="18sp"
+                android:background="#F5F5F5"
+                android:padding="12dp"
+                android:visibility="visible"
+                />
+
+            <LinearLayout
+                android:id="@+id/btn_cautieptheo"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center_horizontal"
+                android:background="@drawable/cr20b7fa7b5"
+                android:paddingVertical="13dp"
+                android:layout_marginHorizontal="45dp"
+                android:layout_marginBottom="40dp"
+                android:clickable="true"
+                android:focusable="true"
+                android:orientation="vertical">
+
+                <TextView
+                    android:text="Câu tiếp theo"
+                    android:textColor="#000000"
+                    android:textSize="18sp"
+                    android:textStyle="bold"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"/>
+            </LinearLayout>
+
             <LinearLayout
                 android:id="@+id/rfwpw9ywpjjq"
                 android:layout_width="match_parent"
@@ -110,14 +146,31 @@
                 </LinearLayout>
             </LinearLayout>
             <LinearLayout
+                android:id="@+id/r8rx11p6uzv"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center_horizontal"
+                android:layout_marginBottom="13dp"
+                android:orientation="vertical">
+                <TextView
+                    android:id="@+id/textthoigianghiam"
+                    android:textColor="#4A4A4A"
+                    android:textSize="20sp"
+                    android:textStyle="bold"
+                    android:layout_height="wrap_content"
+                    android:layout_width="wrap_content"
+                    android:text="00:00,00\n"
+                    />
+            </LinearLayout>
+            <LinearLayout
                 android:id="@+id/ryegkqnzregn"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:gravity="center_horizontal"
                 android:background="@drawable/cr40ba6a6a6"
                 android:orientation="vertical">
-                <com.google.android.material.imageview.ShapeableImageView
-                    android:id="@+id/rfe6xykaz4an"
+                <ImageView
+                    android:id="@+id/btnbatdaughiam"
                     app:shapeAppearanceOverlay="@style/cr40"
                     android:layout_width="90dp"
                     android:layout_height="90dp"
@@ -127,6 +180,27 @@
                     android:scaleType="fitXY"
                     />
             </LinearLayout>
+            <LinearLayout
+                android:id="@+id/btnnghelaiketqua"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center_horizontal"
+                android:layout_marginBottom="20dp"
+                android:orientation="vertical"
+                android:visibility="gone">
+
+                <TextView
+                    android:id="@+id/txtNgheLai"
+                    android:text="Nghe lại kết quả"
+                    android:textColor="#000000"
+                    android:textSize="18sp"
+                    android:textStyle="bold"
+                    android:padding="12dp"
+                    android:background="@drawable/cr20b7fa7b5"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"/>
+            </LinearLayout>
+
         </LinearLayout>
     </ScrollView>
 </LinearLayout>

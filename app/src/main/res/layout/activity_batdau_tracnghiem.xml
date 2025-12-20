@@ -87,7 +87,7 @@
                 android:text="Bộ câu hỏi đánh giá trầm cảm (PHQ-9)"
                 />
             <LinearLayout
-                android:id="@+id/rt7r3btxs2ui"
+                android:id="@+id/btn_batdautracnghiem"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:gravity="center_horizontal"

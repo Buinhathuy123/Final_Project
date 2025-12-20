@@ -95,7 +95,7 @@
                 android:layout_marginBottom="381dp"
                 android:orientation="vertical">
                 <LinearLayout
-                    android:id="@+id/rcx0ls4s5hbq"
+                    android:id="@+id/btn_batdauthuchienghiam"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:background="@drawable/cr20b7fa7b5"

@@ -73,7 +73,6 @@ public class KetQuaTracNghiemActivity extends AppCompatActivity {
         txtLoiKhuyen.setText(khuyen);
     }
 
-    // 🔗 Link âm nhạc theo mức độ (bạn thay link tùy ý)
     private String getMusicLinkByScore(int score) {
 
         if (score <= 4) {
