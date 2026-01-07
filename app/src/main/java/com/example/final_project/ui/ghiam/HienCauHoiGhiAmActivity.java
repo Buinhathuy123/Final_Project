@@ -1,12 +1,12 @@
 package com.example.final_project.ui.ghiam;
 
 import android.Manifest;
-import android.media.MediaPlayer;
-import android.media.MediaRecorder;
+import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
-import android.util.Log;
-import android.view.View;
+import android.speech.RecognitionListener;
+import android.speech.RecognizerIntent;
+import android.speech.SpeechRecognizer;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
@@ -20,31 +20,32 @@ import com.example.final_project.data.model.Question;
 import com.example.final_project.data.repository.QuestionRepository;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 
 public class HienCauHoiGhiAmActivity extends AppCompatActivity {
 
-    private static final String TAG = "GHI_AM";
-
+    // UI
     private TextView txtCauHoi, txtKetQuaNoi, txtThoiGian;
-    private ImageView btnBatDauGhiAm;
-    private LinearLayout btnNgheLai, btnCauTiepTheo;
+    private ImageView btnGhiAm;
+    private LinearLayout btnCauTiepTheo;
 
-    private MediaRecorder recorder;
-    private MediaPlayer player;
-
-    private boolean isRecording = false;
-    private String audioPath = "";
-
-    private Handler handler = new Handler();
-    private long startTime;
-
-    // ====== CÂU HỎI ======
+    // Question
     private List<Question> questions;
     private int currentIndex = 0;
+
+    // Speech
+    private SpeechRecognizer speechRecognizer;
+    private Intent speechIntent;
+    private boolean isRecording = false;
+
+    // Timer
+    private Handler handler = new Handler();
+    private long startTime;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -53,127 +54,41 @@ public class HienCauHoiGhiAmActivity extends AppCompatActivity {
 
         ActivityCompat.requestPermissions(
                 this,
-                new String[]{Manifest.permission.RECORD_AUDIO},
+                new String[]{
+                        Manifest.permission.RECORD_AUDIO,
+                        Manifest.permission.INTERNET
+                },
                 1
         );
 
         initViews();
+        setupSpeechRecognizer();
         loadQuestions();
-        setupActions();
+
+        btnGhiAm.setOnClickListener(v -> toggleRecording());
+        btnCauTiepTheo.setOnClickListener(v -> nextQuestion());
     }
+
+    // ================= INIT =================
 
     private void initViews() {
         txtCauHoi = findViewById(R.id.textcauhoighiam);
         txtKetQuaNoi = findViewById(R.id.txtKetQuaNoi);
         txtThoiGian = findViewById(R.id.textthoigianghiam);
-
-        btnBatDauGhiAm = findViewById(R.id.btnbatdaughiam);
-        btnNgheLai = findViewById(R.id.btnnghelaiketqua);
+        btnGhiAm = findViewById(R.id.btnbatdaughiam);
         btnCauTiepTheo = findViewById(R.id.btn_cautieptheo);
 
-        txtKetQuaNoi.setVisibility(View.GONE);
-        btnNgheLai.setVisibility(View.GONE);
-    }
-
-    private void setupActions() {
-        btnBatDauGhiAm.setOnClickListener(v -> {
-            if (!isRecording) startRecord();
-            else stopRecord();
-        });
-
-        btnNgheLai.setOnClickListener(v -> playAudio());
-
-        btnCauTiepTheo.setOnClickListener(v -> nextQuestion());
-    }
-
-    // ================= GHI ÂM =================
-
-    private void startRecord() {
-        try {
-            File folder = new File(getExternalFilesDir(null), "Recordings");
-            if (!folder.exists()) folder.mkdirs();
-
-            audioPath = new File(
-                    folder,
-                    "record_" + new SimpleDateFormat(
-                            "yyyyMMdd_HHmmss", Locale.getDefault()
-                    ).format(new Date()) + ".m4a"
-            ).getAbsolutePath();
-
-            recorder = new MediaRecorder();
-            recorder.setAudioSource(MediaRecorder.AudioSource.MIC);
-            recorder.setOutputFormat(MediaRecorder.OutputFormat.MPEG_4);
-            recorder.setAudioEncoder(MediaRecorder.AudioEncoder.AAC);
-            recorder.setOutputFile(audioPath);
-            recorder.prepare();
-            recorder.start();
-
-            isRecording = true;
-            btnBatDauGhiAm.setImageResource(R.drawable.dangghiam);
-
-            startTime = System.currentTimeMillis();
-            handler.post(timer);
-
-            Toast.makeText(this, "Bắt đầu ghi âm", Toast.LENGTH_SHORT).show();
-
-        } catch (Exception e) {
-            Log.e(TAG, "Lỗi ghi âm", e);
-        }
-    }
-
-    private void stopRecord() {
-        try {
-            recorder.stop();
-            recorder.release();
-        } catch (Exception ignored) {}
-
-        recorder = null;
-        isRecording = false;
-
-        handler.removeCallbacks(timer);
+        txtKetQuaNoi.setText("");
         txtThoiGian.setText("00:00");
-
-        btnBatDauGhiAm.setImageResource(R.drawable.nutghiam);
-        btnNgheLai.setVisibility(View.VISIBLE);
-
-        txtKetQuaNoi.setVisibility(View.VISIBLE);
-        txtKetQuaNoi.setText("File ghi âm đã lưu tại:\n" + audioPath);
-
-        Toast.makeText(this, "Đã dừng ghi âm", Toast.LENGTH_SHORT).show();
     }
 
-    // ================= PHÁT AUDIO =================
-
-    private void playAudio() {
-        try {
-            if (player != null) player.release();
-            player = new MediaPlayer();
-            player.setDataSource(audioPath);
-            player.prepare();
-            player.start();
-        } catch (Exception e) {
-            Log.e(TAG, "Lỗi phát audio", e);
-        }
-    }
-
-    // ================= TIMER =================
-
-    private final Runnable timer = new Runnable() {
-        @Override
-        public void run() {
-            long sec = (System.currentTimeMillis() - startTime) / 1000;
-            txtThoiGian.setText(String.format("%02d:%02d", sec / 60, sec % 60));
-            handler.postDelayed(this, 500);
-        }
-    };
-
-    // ================= CÂU HỎI =================
+    // ================= QUESTIONS =================
 
     private void loadQuestions() {
         new QuestionRepository().loadRandomQuestions(new QuestionRepository.QuestionCallback() {
             @Override
-            public void onSuccess(List<Question> list) {
-                questions = list;
+            public void onSuccess(List<Question> randomQuestions) {
+                questions = randomQuestions;
                 showQuestion();
             }
 
@@ -187,29 +102,164 @@ public class HienCauHoiGhiAmActivity extends AppCompatActivity {
     private void showQuestion() {
         if (questions == null || questions.isEmpty()) return;
 
-        txtCauHoi.setText(
-                "Câu " + (currentIndex + 1) + ": " +
-                        questions.get(currentIndex).getText()
-        );
-
-        if (currentIndex == 8) {
-            btnCauTiepTheo.setVisibility(View.GONE);
-        } else {
-            btnCauTiepTheo.setVisibility(View.VISIBLE);
-        }
+        txtCauHoi.setText(questions.get(currentIndex).getText());
+        txtKetQuaNoi.setText("");
+        resetTimer();
     }
 
     private void nextQuestion() {
-        if (currentIndex < 8) {
-            currentIndex++;
-            showQuestion();
+        if (isRecording) {
+            Toast.makeText(this, "Hãy dừng ghi âm trước", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        currentIndex++;
+        if (currentIndex >= questions.size()) {
+            Toast.makeText(this, "Đã hết câu hỏi", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        showQuestion();
+    }
+
+    // ================= SPEECH =================
+
+    private void setupSpeechRecognizer() {
+        speechRecognizer = SpeechRecognizer.createSpeechRecognizer(this);
+
+        speechIntent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
+        speechIntent.putExtra(
+                RecognizerIntent.EXTRA_LANGUAGE_MODEL,
+                RecognizerIntent.LANGUAGE_MODEL_FREE_FORM
+        );
+        speechIntent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, "vi-VN");
+        speechIntent.putExtra(RecognizerIntent.EXTRA_PARTIAL_RESULTS, true);
+
+        speechRecognizer.setRecognitionListener(new RecognitionListener() {
+            @Override public void onReadyForSpeech(Bundle params) {}
+            @Override public void onBeginningOfSpeech() {}
+            @Override public void onRmsChanged(float rmsdB) {}
+            @Override public void onBufferReceived(byte[] buffer) {}
+            @Override public void onEndOfSpeech() {}
+            @Override public void onEvent(int eventType, Bundle params) {}
+
+            @Override
+            public void onError(int error) {
+                // Không toast lỗi khi stopListening
+            }
+
+            @Override
+            public void onPartialResults(Bundle partialResults) {
+                ArrayList<String> list =
+                        partialResults.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION);
+                if (list != null && !list.isEmpty()) {
+                    txtKetQuaNoi.setText(list.get(0));
+                }
+            }
+
+            @Override
+            public void onResults(Bundle results) {
+                ArrayList<String> list =
+                        results.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION);
+                if (list != null && !list.isEmpty()) {
+                    txtKetQuaNoi.setText(list.get(0));
+                }
+            }
+        });
+    }
+
+    private void toggleRecording() {
+        if (!isRecording) {
+            startRecording();
+        } else {
+            stopRecording();
         }
     }
+
+    private void startRecording() {
+        isRecording = true;
+        btnGhiAm.setImageResource(R.drawable.dangghiam);
+        startTimer();
+        speechRecognizer.startListening(speechIntent);
+    }
+
+    private void stopRecording() {
+        isRecording = false;
+        btnGhiAm.setImageResource(R.drawable.nutghiam);
+
+        speechRecognizer.cancel();
+        stopTimer();
+        resetTimer();
+
+        saveTextToFile(txtKetQuaNoi.getText().toString());
+    }
+
+    // ================= SAVE TEXT =================
+
+    private void saveTextToFile(String content) {
+        try {
+            if (content == null || content.trim().isEmpty()) {
+                Toast.makeText(this, "Không có nội dung để lưu", Toast.LENGTH_SHORT).show();
+                return;
+            }
+
+            String time = new SimpleDateFormat(
+                    "yyyyMMdd_HHmmss", Locale.getDefault()
+            ).format(new Date());
+
+            File dir = new File(getExternalFilesDir(null), "speech_text");
+            if (!dir.exists()) dir.mkdirs();
+
+            File file = new File(dir, "speech_" + time + ".txt");
+
+            FileOutputStream fos = new FileOutputStream(file);
+            fos.write(content.getBytes("UTF-8"));
+            fos.close();
+
+            Toast.makeText(
+                    this,
+                    "Đã lưu file:\n" + file.getAbsolutePath(),
+                    Toast.LENGTH_LONG
+            ).show();
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            Toast.makeText(this, "Lỗi lưu file text", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    // ================= TIMER =================
+
+    private void startTimer() {
+        startTime = System.currentTimeMillis();
+        handler.post(timerRunnable);
+    }
+
+    private void stopTimer() {
+        handler.removeCallbacks(timerRunnable);
+    }
+
+    private void resetTimer() {
+        stopTimer();
+        txtThoiGian.setText("00:00");
+    }
+
+    private final Runnable timerRunnable = new Runnable() {
+        @Override
+        public void run() {
+            long seconds = (System.currentTimeMillis() - startTime) / 1000;
+            txtThoiGian.setText(
+                    String.format(Locale.getDefault(), "%02d:%02d",
+                            seconds / 60, seconds % 60)
+            );
+            handler.postDelayed(this, 1000);
+        }
+    };
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        if (player != null) player.release();
-        if (recorder != null) recorder.release();
+        if (speechRecognizer != null) {
+            speechRecognizer.destroy();
+        }
     }
 }

@@ -122,7 +122,7 @@
                 android:background="@drawable/cr40b7fa7b5"
                 android:paddingVertical="11dp"
                 android:layout_marginBottom="11dp"
-                android:layout_marginHorizontal="47dp"
+                android:layout_marginHorizontal="22dp"
                 android:orientation="horizontal">
 
                 <!-- Space 1 (Left padding) -->
@@ -138,9 +138,8 @@
                     android:id="@+id/btn_ghiam"
                     android:layout_width="48dp"
                     android:layout_height="48dp"
-                    android:src="@drawable/mic"
                     android:scaleType="fitCenter"
-                    />
+                    android:src="@drawable/mic" />
 
                 <!-- Space 2 (Center left) -->
                 <View
