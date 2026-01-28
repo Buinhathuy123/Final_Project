@@ -11,6 +11,8 @@ import com.example.final_project.R;
 import com.example.final_project.ui.ghiam.BatDauGhiAmActivity;
 import com.example.final_project.ui.tracnghiem.BatDauTracNghiemActivity;
 import com.example.final_project.ui.tracnghiem.ChonTracNghiemActivity;
+import com.example.final_project.ui.hinhanh.BatDauHinhAnhActivity;
+import com.example.final_project.ui.hinhanh.BatDauHinhAnhActivity;
 
 public class TrangChuActicvity extends AppCompatActivity {
 
@@ -39,5 +41,28 @@ public class TrangChuActicvity extends AppCompatActivity {
             );
             startActivity(intent);
         });
+        View btnHinhAnh = findViewById(R.id.btn_hinhanh);
+
+        // 3. Bắt sự kiện click
+        if (btnHinhAnh != null) {
+            btnHinhAnh.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    Intent intent = new Intent(TrangChuActicvity.this, BatDauHinhAnhActivity.class);
+                    startActivity(intent);
+                }
+            });
+        }
+
+        if (btnHinhAnh != null) {
+            btnHinhAnh.setOnClickListener(v -> {
+                // Chuyển sang màn hình Bắt đầu Hình ảnh
+                Intent intent = new Intent(TrangChuActicvity.this, BatDauHinhAnhActivity.class);
+                startActivity(intent);
+            });
+        }
+
+
+
     }
 }

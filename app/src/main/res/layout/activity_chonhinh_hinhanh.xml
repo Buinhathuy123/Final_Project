@@ -87,11 +87,10 @@
                 <com.google.android.material.imageview.ShapeableImageView
                     android:id="@+id/ro29yxj795bn"
                     app:shapeAppearanceOverlay="@style/cr40"
-                    android:layout_width="31dp"
-                    android:layout_height="32dp"
-                    android:layout_marginTop="91dp"
-                    android:layout_marginBottom="105dp"
-                    android:scaleType="fitXY"
+                    android:layout_width="match_parent"
+                    android:layout_height="250dp"
+                    android:scaleType="fitCenter"
+                    android:adjustViewBounds="true"
                     />
             </LinearLayout>
             <LinearLayout
@@ -130,9 +129,10 @@
                     <com.google.android.material.imageview.ShapeableImageView
                         android:id="@+id/r1z7dtlmlpzmi"
                         app:shapeAppearanceOverlay="@style/cr40"
-                        android:layout_width="29dp"
-                        android:layout_height="29dp"
-                        android:src="@drawable/loadinghinhanh"
+                        android:layout_width="32dp"
+                        android:layout_height="32dp"
+                        android:src="@drawable/ic_camera"
+                        app:tint="#FFFFFF"
                         android:scaleType="fitXY"
                         />
                 </LinearLayout>

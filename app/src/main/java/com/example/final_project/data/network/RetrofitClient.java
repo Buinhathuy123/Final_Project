@@ -4,7 +4,7 @@ import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 
 public class RetrofitClient {
-    private static final String BASE_URL = "https://final-project1-guyr.onrender.com/"; // Android emulator -> localhost
+    private static final String BASE_URL = "http://10.0.2.2:3000/"; // Android emulator -> localhost
     private static Retrofit instance;
 
     public static Retrofit getInstance() {
