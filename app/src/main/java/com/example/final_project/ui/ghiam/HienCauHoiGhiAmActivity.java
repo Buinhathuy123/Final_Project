@@ -1,9 +1,12 @@
 package com.example.final_project.ui.ghiam;
 
 import android.Manifest;
-import android.media.MediaRecorder;
+import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
+import android.speech.RecognitionListener;
+import android.speech.RecognizerIntent;
+import android.speech.SpeechRecognizer;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
@@ -14,23 +17,21 @@ import androidx.core.app.ActivityCompat;
 
 import com.example.final_project.R;
 import com.example.final_project.data.model.Question;
-import com.example.final_project.data.model.SpeechResponse;
-import com.example.final_project.data.network.ApiService;
-import com.example.final_project.data.network.RetrofitClient;
 import com.example.final_project.data.repository.QuestionRepository;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
+import com.google.mlkit.common.model.DownloadConditions;
+import com.google.mlkit.nl.translate.TranslateLanguage;
+import com.google.mlkit.nl.translate.Translation;
+import com.google.mlkit.nl.translate.Translator;
+import com.google.mlkit.nl.translate.TranslatorOptions;
 
-import okhttp3.MediaType;
-import okhttp3.MultipartBody;
-import okhttp3.RequestBody;
-import retrofit2.Call;
-import retrofit2.Callback;
-import retrofit2.Response;
 
 public class HienCauHoiGhiAmActivity extends AppCompatActivity {
 
@@ -43,19 +44,22 @@ public class HienCauHoiGhiAmActivity extends AppCompatActivity {
     private List<Question> questions;
     private int currentIndex = 0;
 
-    // Recording
+    // Speech
+    private SpeechRecognizer speechRecognizer;
+    private Intent speechIntent;
     private boolean isRecording = false;
-    private MediaRecorder mediaRecorder;
-    private String audioFilePath;
 
     // Timer
     private Handler handler = new Handler();
     private long startTime;
+    private DepressionClassifier classifier;
+    private Translator vietToEngTranslator;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_manhinhcho_ghiam);
+
 
         ActivityCompat.requestPermissions(
                 this,
@@ -65,8 +69,10 @@ public class HienCauHoiGhiAmActivity extends AppCompatActivity {
                 },
                 1
         );
-
+        setupTranslator();
         initViews();
+        classifier = new DepressionClassifier(this);
+        setupSpeechRecognizer();
         loadQuestions();
 
         btnGhiAm.setOnClickListener(v -> toggleRecording());
@@ -125,7 +131,51 @@ public class HienCauHoiGhiAmActivity extends AppCompatActivity {
         showQuestion();
     }
 
-    // ================= RECORD =================
+    // ================= SPEECH =================
+
+    private void setupSpeechRecognizer() {
+        speechRecognizer = SpeechRecognizer.createSpeechRecognizer(this);
+
+        speechIntent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
+        speechIntent.putExtra(
+                RecognizerIntent.EXTRA_LANGUAGE_MODEL,
+                RecognizerIntent.LANGUAGE_MODEL_FREE_FORM
+        );
+        speechIntent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, "vi-VN");
+        speechIntent.putExtra(RecognizerIntent.EXTRA_PARTIAL_RESULTS, true);
+
+        speechRecognizer.setRecognitionListener(new RecognitionListener() {
+            @Override public void onReadyForSpeech(Bundle params) {}
+            @Override public void onBeginningOfSpeech() {}
+            @Override public void onRmsChanged(float rmsdB) {}
+            @Override public void onBufferReceived(byte[] buffer) {}
+            @Override public void onEndOfSpeech() {}
+            @Override public void onEvent(int eventType, Bundle params) {}
+
+            @Override
+            public void onError(int error) {
+                // Không toast lỗi khi stopListening
+            }
+
+            @Override
+            public void onPartialResults(Bundle partialResults) {
+                ArrayList<String> list =
+                        partialResults.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION);
+                if (list != null && !list.isEmpty()) {
+                    txtKetQuaNoi.setText(list.get(0));
+                }
+            }
+
+            @Override
+            public void onResults(Bundle results) {
+                ArrayList<String> list =
+                        results.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION);
+                if (list != null && !list.isEmpty()) {
+                    txtKetQuaNoi.setText(list.get(0));
+                }
+            }
+        });
+    }
 
     private void toggleRecording() {
         if (!isRecording) {
@@ -134,99 +184,112 @@ public class HienCauHoiGhiAmActivity extends AppCompatActivity {
             stopRecording();
         }
     }
+    private void setupTranslator() {
+        TranslatorOptions options = new TranslatorOptions.Builder()
+                .setSourceLanguage(TranslateLanguage.VIETNAMESE)
+                .setTargetLanguage(TranslateLanguage.ENGLISH)
+                .build();
+        vietToEngTranslator = Translation.getClient(options);
+
+        // Tải model ngôn ngữ nếu chưa có
+        DownloadConditions conditions = new DownloadConditions.Builder()
+                .requireWifi()
+                .build();
+
+        vietToEngTranslator.downloadModelIfNeeded(conditions)
+                .addOnSuccessListener(unused -> {
+                    // Tải thành công hoặc đã có sẵn
+                    // Có thể Toast báo "Đã sẵn sàng dịch" nếu thích
+                })
+                .addOnFailureListener(e -> {
+                    Toast.makeText(this, "Lỗi tải gói ngôn ngữ", Toast.LENGTH_SHORT).show();
+                });
+    }
 
     private void startRecording() {
+        isRecording = true;
+        btnGhiAm.setImageResource(R.drawable.dangghiam);
+        startTimer();
+        speechRecognizer.startListening(speechIntent);
+    }
+
+    private void stopRecording() {
+        isRecording = false;
+        btnGhiAm.setImageResource(R.drawable.nutghiam);
+
+        speechRecognizer.stopListening();
+        stopTimer();
+        resetTimer();
+
+        // Lấy text Tiếng Việt
+        String vietnameseText = txtKetQuaNoi.getText().toString();
+
+        if (!vietnameseText.isEmpty()) {
+            // 1. Lưu file gốc Tiếng Việt (để người dùng đọc lại sau này)
+            saveTextToFile(vietnameseText);
+
+            // 2. Dịch sang Tiếng Anh rồi mới đoán bệnh
+            translateAndPredict(vietnameseText);
+        }
+    }
+    private void translateAndPredict(String vietText) {
+        if (vietToEngTranslator == null) return;
+
+        // Bắt đầu dịch
+        vietToEngTranslator.translate(vietText)
+                .addOnSuccessListener(englishText -> {
+                    // Dịch thành công! englishText là văn bản tiếng Anh
+
+                    // --- GỌI AI Ở ĐÂY ---
+                    // Lúc này classifier sẽ nhận input tiếng Anh, đúng với word_dict của bạn
+                    String ketqua = classifier.predict(englishText);
+
+                    // Hiển thị kết quả
+                    String hienThi = "Tiếng Việt: " + vietText +
+                            "\n\nTiếng Anh (AI đọc): " + englishText +
+                            "\n\n=> AI Chẩn đoán: " + ketqua;
+
+                    txtKetQuaNoi.setText(hienThi);
+                    Toast.makeText(this, "Kết quả: " + ketqua, Toast.LENGTH_LONG).show();
+                })
+                .addOnFailureListener(e -> {
+                    Toast.makeText(this, "Lỗi dịch thuật", Toast.LENGTH_SHORT).show();
+                    e.printStackTrace();
+                });
+    }
+
+    // ================= SAVE TEXT =================
+
+    private void saveTextToFile(String content) {
         try {
-            isRecording = true;
-            btnGhiAm.setImageResource(R.drawable.dangghiam);
-            startTimer();
+            if (content == null || content.trim().isEmpty()) {
+                Toast.makeText(this, "Không có nội dung để lưu", Toast.LENGTH_SHORT).show();
+                return;
+            }
 
             String time = new SimpleDateFormat(
                     "yyyyMMdd_HHmmss", Locale.getDefault()
             ).format(new Date());
 
-            File dir = new File(getExternalFilesDir(null), "audio");
+            File dir = new File(getExternalFilesDir(null), "speech_text");
             if (!dir.exists()) dir.mkdirs();
 
-            File file = new File(dir, "record_" + time + ".m4a");
-            audioFilePath = file.getAbsolutePath();
+            File file = new File(dir, "speech_" + time + ".txt");
 
-            mediaRecorder = new MediaRecorder();
-            mediaRecorder.setAudioSource(MediaRecorder.AudioSource.MIC);
-            mediaRecorder.setOutputFormat(MediaRecorder.OutputFormat.MPEG_4);
-            mediaRecorder.setAudioEncoder(MediaRecorder.AudioEncoder.AAC);
-            mediaRecorder.setOutputFile(audioFilePath);
+            FileOutputStream fos = new FileOutputStream(file);
+            fos.write(content.getBytes("UTF-8"));
+            fos.close();
 
-            mediaRecorder.prepare();
-            mediaRecorder.start();
-
-        } catch (Exception e) {
-            e.printStackTrace();
-            Toast.makeText(this, "Không thể ghi âm", Toast.LENGTH_SHORT).show();
-        }
-    }
-
-    private void stopRecording() {
-        try {
-            isRecording = false;
-            btnGhiAm.setImageResource(R.drawable.nutghiam);
-            stopTimer();
-            resetTimer();
-
-            if (mediaRecorder != null) {
-                mediaRecorder.stop();
-                mediaRecorder.release();
-                mediaRecorder = null;
-            }
-
-            // 🔥 GỬI AUDIO LÊN SERVER
-            uploadAudioToServer(audioFilePath);
+            Toast.makeText(
+                    this,
+                    "Đã lưu file:\n" + file.getAbsolutePath(),
+                    Toast.LENGTH_LONG
+            ).show();
 
         } catch (Exception e) {
             e.printStackTrace();
+            Toast.makeText(this, "Lỗi lưu file text", Toast.LENGTH_SHORT).show();
         }
-    }
-
-    // ================= UPLOAD AUDIO =================
-
-    private void uploadAudioToServer(String path) {
-        File file = new File(path);
-
-        RequestBody requestBody =
-                RequestBody.create(file, MediaType.parse("audio/*"));
-
-        MultipartBody.Part body =
-                MultipartBody.Part.createFormData("audio", file.getName(), requestBody);
-
-        ApiService api = RetrofitClient.getInstance().create(ApiService.class);
-
-        api.uploadAudio(body).enqueue(new Callback<SpeechResponse>() {
-            @Override
-            public void onResponse(Call<SpeechResponse> call, Response<SpeechResponse> response) {
-                if (response.isSuccessful()
-                        && response.body() != null
-                        && response.body().isOk()) {
-
-                    txtKetQuaNoi.setText(response.body().getText());
-
-                } else {
-                    Toast.makeText(
-                            HienCauHoiGhiAmActivity.this,
-                            "Không nhận được text",
-                            Toast.LENGTH_SHORT
-                    ).show();
-                }
-            }
-
-            @Override
-            public void onFailure(Call<SpeechResponse> call, Throwable t) {
-                Toast.makeText(
-                        HienCauHoiGhiAmActivity.this,
-                        "Lỗi kết nối server",
-                        Toast.LENGTH_SHORT
-                ).show();
-            }
-        });
     }
 
     // ================= TIMER =================
@@ -256,4 +319,12 @@ public class HienCauHoiGhiAmActivity extends AppCompatActivity {
             handler.postDelayed(this, 1000);
         }
     };
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        if (speechRecognizer != null) {
+            speechRecognizer.destroy();
+        }
+    }
 }
