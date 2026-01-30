@@ -1,9 +1,13 @@
 package com.example.final_project.ui.ghiam;
 
 import android.Manifest;
+import android.content.Intent;
 import android.media.MediaRecorder;
 import android.os.Bundle;
 import android.os.Handler;
+import android.speech.RecognitionListener;
+import android.speech.RecognizerIntent;
+import android.speech.SpeechRecognizer;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
@@ -14,43 +18,40 @@ import androidx.core.app.ActivityCompat;
 
 import com.example.final_project.R;
 import com.example.final_project.data.model.Question;
-import com.example.final_project.data.model.SpeechResponse;
-import com.example.final_project.data.network.ApiService;
-import com.example.final_project.data.network.RetrofitClient;
 import com.example.final_project.data.repository.QuestionRepository;
 
 import java.io.File;
+import java.io.FileWriter;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 
-import okhttp3.MediaType;
-import okhttp3.MultipartBody;
-import okhttp3.RequestBody;
-import retrofit2.Call;
-import retrofit2.Callback;
-import retrofit2.Response;
-
 public class HienCauHoiGhiAmActivity extends AppCompatActivity {
 
-    // UI
+    // ================= UI =================
     private TextView txtCauHoi, txtKetQuaNoi, txtThoiGian;
-    private ImageView btnGhiAm;
+    private ImageView btnVoiceToText, btnVoiceToFile;
     private LinearLayout btnCauTiepTheo;
 
-    // Question
+    // ================= QUESTIONS =================
     private List<Question> questions;
     private int currentIndex = 0;
 
-    // Recording
-    private boolean isRecording = false;
-    private MediaRecorder mediaRecorder;
-    private String audioFilePath;
-
-    // Timer
+    // ================= TIMER =================
     private Handler handler = new Handler();
     private long startTime;
+
+    // ================= VOICE TO TEXT =================
+    private SpeechRecognizer speechRecognizer;
+    private Intent speechIntent;
+    private boolean isListening = false;
+
+    // ================= VOICE TO FILE =================
+    private MediaRecorder mediaRecorder;
+    private boolean isRecordingFile = false;
+    private String audioFilePath;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -61,15 +62,17 @@ public class HienCauHoiGhiAmActivity extends AppCompatActivity {
                 this,
                 new String[]{
                         Manifest.permission.RECORD_AUDIO,
-                        Manifest.permission.INTERNET
+                        Manifest.permission.WRITE_EXTERNAL_STORAGE
                 },
                 1
         );
 
         initViews();
+        initSpeechRecognizer();
         loadQuestions();
 
-        btnGhiAm.setOnClickListener(v -> toggleRecording());
+        btnVoiceToText.setOnClickListener(v -> toggleVoiceToText());
+        btnVoiceToFile.setOnClickListener(v -> toggleVoiceToFile());
         btnCauTiepTheo.setOnClickListener(v -> nextQuestion());
     }
 
@@ -79,7 +82,9 @@ public class HienCauHoiGhiAmActivity extends AppCompatActivity {
         txtCauHoi = findViewById(R.id.textcauhoighiam);
         txtKetQuaNoi = findViewById(R.id.txtKetQuaNoi);
         txtThoiGian = findViewById(R.id.textthoigianghiam);
-        btnGhiAm = findViewById(R.id.btnbatdaughiam);
+
+        btnVoiceToText = findViewById(R.id.btnbatdaughiam1);
+        btnVoiceToFile = findViewById(R.id.btnbatdaughiam2);
         btnCauTiepTheo = findViewById(R.id.btn_cautieptheo);
 
         txtKetQuaNoi.setText("");
@@ -89,30 +94,39 @@ public class HienCauHoiGhiAmActivity extends AppCompatActivity {
     // ================= QUESTIONS =================
 
     private void loadQuestions() {
-        new QuestionRepository().loadRandomQuestions(new QuestionRepository.QuestionCallback() {
-            @Override
-            public void onSuccess(List<Question> randomQuestions) {
-                questions = randomQuestions;
-                showQuestion();
-            }
+        new QuestionRepository().loadRandomQuestions(
+                new QuestionRepository.QuestionCallback() {
+                    @Override
+                    public void onSuccess(List<Question> randomQuestions) {
+                        if (randomQuestions == null || randomQuestions.isEmpty()) {
+                            txtCauHoi.setText("Không có câu hỏi");
+                            return;
+                        }
+                        questions = randomQuestions;
+                        currentIndex = 0;
+                        showQuestion();
+                    }
 
-            @Override
-            public void onFail(String error) {
-                txtCauHoi.setText("Lỗi tải câu hỏi");
-            }
-        });
+                    @Override
+                    public void onFail(String error) {
+                        Toast.makeText(
+                                HienCauHoiGhiAmActivity.this,
+                                "Không tải được câu hỏi",
+                                Toast.LENGTH_SHORT
+                        ).show();
+                    }
+                }
+        );
     }
 
     private void showQuestion() {
         if (questions == null || questions.isEmpty()) return;
-
         txtCauHoi.setText(questions.get(currentIndex).getText());
         txtKetQuaNoi.setText("");
-        resetTimer();
     }
 
     private void nextQuestion() {
-        if (isRecording) {
+        if (isListening || isRecordingFile) {
             Toast.makeText(this, "Hãy dừng ghi âm trước", Toast.LENGTH_SHORT).show();
             return;
         }
@@ -125,20 +139,98 @@ public class HienCauHoiGhiAmActivity extends AppCompatActivity {
         showQuestion();
     }
 
-    // ================= RECORD =================
+    // ================= VOICE TO TEXT =================
 
-    private void toggleRecording() {
-        if (!isRecording) {
-            startRecording();
+    private void initSpeechRecognizer() {
+        speechRecognizer = SpeechRecognizer.createSpeechRecognizer(this);
+
+        speechIntent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
+        speechIntent.putExtra(
+                RecognizerIntent.EXTRA_LANGUAGE_MODEL,
+                RecognizerIntent.LANGUAGE_MODEL_FREE_FORM
+        );
+        speechIntent.putExtra(
+                RecognizerIntent.EXTRA_LANGUAGE,
+                "vi-VN"
+        );
+
+        speechRecognizer.setRecognitionListener(new RecognitionListener() {
+            @Override public void onReadyForSpeech(Bundle params) {}
+            @Override public void onBeginningOfSpeech() {}
+            @Override public void onRmsChanged(float rmsdB) {}
+            @Override public void onBufferReceived(byte[] buffer) {}
+            @Override public void onEndOfSpeech() {}
+
+            @Override
+            public void onError(int error) {
+                txtKetQuaNoi.setText("❌ Không nhận dạng được");
+                stopVoiceToText();
+            }
+
+            @Override
+            public void onResults(Bundle results) {
+                ArrayList<String> texts =
+                        results.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION);
+
+                if (texts != null && !texts.isEmpty()) {
+                    String result = texts.get(0);
+                    txtKetQuaNoi.setText(result);
+
+                    // ✅ LƯU TEXT RA FILE + THÔNG BÁO ĐƯỜNG DẪN
+                    saveTextToFile(result);
+                }
+                stopVoiceToText();
+            }
+
+            @Override public void onPartialResults(Bundle partialResults) {}
+            @Override public void onEvent(int eventType, Bundle params) {}
+        });
+    }
+
+    private void toggleVoiceToText() {
+        if (isRecordingFile) {
+            Toast.makeText(this, "Đang ghi file audio", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        if (!isListening) {
+            isListening = true;
+            startTimer();
+            setRecordingUI();
+            txtKetQuaNoi.setText("🎤 Đang nghe...");
+            speechRecognizer.startListening(speechIntent);
         } else {
-            stopRecording();
+            stopVoiceToText();
         }
     }
 
-    private void startRecording() {
+    private void stopVoiceToText() {
+        if (!isListening) return;
+
+        isListening = false;
+        stopTimer();
+        setIdleUI();
+        speechRecognizer.stopListening();
+    }
+
+    // ================= VOICE TO FILE =================
+
+    private void toggleVoiceToFile() {
+        if (isListening) {
+            Toast.makeText(this, "Đang nhận dạng giọng nói", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        if (!isRecordingFile) {
+            startRecordingFile();
+        } else {
+            stopRecordingFile();
+        }
+    }
+
+    private void startRecordingFile() {
         try {
-            isRecording = true;
-            btnGhiAm.setImageResource(R.drawable.dangghiam);
+            isRecordingFile = true;
             startTimer();
 
             String time = new SimpleDateFormat(
@@ -148,7 +240,7 @@ public class HienCauHoiGhiAmActivity extends AppCompatActivity {
             File dir = new File(getExternalFilesDir(null), "audio");
             if (!dir.exists()) dir.mkdirs();
 
-            File file = new File(dir, "record_" + time + ".m4a");
+            File file = new File(dir, "answer_" + time + ".m4a");
             audioFilePath = file.getAbsolutePath();
 
             mediaRecorder = new MediaRecorder();
@@ -160,73 +252,59 @@ public class HienCauHoiGhiAmActivity extends AppCompatActivity {
             mediaRecorder.prepare();
             mediaRecorder.start();
 
+            Toast.makeText(this, "🎙️ Bắt đầu ghi file", Toast.LENGTH_SHORT).show();
+
         } catch (Exception e) {
             e.printStackTrace();
-            Toast.makeText(this, "Không thể ghi âm", Toast.LENGTH_SHORT).show();
         }
     }
 
-    private void stopRecording() {
+    private void stopRecordingFile() {
         try {
-            isRecording = false;
-            btnGhiAm.setImageResource(R.drawable.nutghiam);
+            isRecordingFile = false;
             stopTimer();
-            resetTimer();
 
-            if (mediaRecorder != null) {
-                mediaRecorder.stop();
-                mediaRecorder.release();
-                mediaRecorder = null;
-            }
+            mediaRecorder.stop();
+            mediaRecorder.release();
+            mediaRecorder = null;
 
-            // 🔥 GỬI AUDIO LÊN SERVER
-            uploadAudioToServer(audioFilePath);
+            Toast.makeText(
+                    this,
+                    "💾 Đã lưu audio:\n" + audioFilePath,
+                    Toast.LENGTH_LONG
+            ).show();
 
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
-    // ================= UPLOAD AUDIO =================
+    // ================= SAVE TEXT FILE =================
 
-    private void uploadAudioToServer(String path) {
-        File file = new File(path);
+    private void saveTextToFile(String text) {
+        try {
+            File dir = new File(getExternalFilesDir(null), "text");
+            if (!dir.exists()) dir.mkdirs();
 
-        RequestBody requestBody =
-                RequestBody.create(file, MediaType.parse("audio/*"));
+            String time = new SimpleDateFormat(
+                    "yyyyMMdd_HHmmss", Locale.getDefault()
+            ).format(new Date());
 
-        MultipartBody.Part body =
-                MultipartBody.Part.createFormData("audio", file.getName(), requestBody);
+            File file = new File(dir, "answer_" + time + ".txt");
+            FileWriter writer = new FileWriter(file);
+            writer.write(text);
+            writer.close();
 
-        ApiService api = RetrofitClient.getInstance().create(ApiService.class);
+            // ✅ THÔNG BÁO ĐƯỜNG DẪN FILE TXT
+            Toast.makeText(
+                    this,
+                    "📄 Đã lưu text:\n" + file.getAbsolutePath(),
+                    Toast.LENGTH_LONG
+            ).show();
 
-        api.uploadAudio(body).enqueue(new Callback<SpeechResponse>() {
-            @Override
-            public void onResponse(Call<SpeechResponse> call, Response<SpeechResponse> response) {
-                if (response.isSuccessful()
-                        && response.body() != null
-                        && response.body().isOk()) {
-
-                    txtKetQuaNoi.setText(response.body().getText());
-
-                } else {
-                    Toast.makeText(
-                            HienCauHoiGhiAmActivity.this,
-                            "Không nhận được text",
-                            Toast.LENGTH_SHORT
-                    ).show();
-                }
-            }
-
-            @Override
-            public void onFailure(Call<SpeechResponse> call, Throwable t) {
-                Toast.makeText(
-                        HienCauHoiGhiAmActivity.this,
-                        "Lỗi kết nối server",
-                        Toast.LENGTH_SHORT
-                ).show();
-            }
-        });
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     // ================= TIMER =================
@@ -238,22 +316,38 @@ public class HienCauHoiGhiAmActivity extends AppCompatActivity {
 
     private void stopTimer() {
         handler.removeCallbacks(timerRunnable);
-    }
-
-    private void resetTimer() {
-        stopTimer();
         txtThoiGian.setText("00:00");
     }
 
     private final Runnable timerRunnable = new Runnable() {
         @Override
         public void run() {
-            long seconds = (System.currentTimeMillis() - startTime) / 1000;
+            long sec = (System.currentTimeMillis() - startTime) / 1000;
             txtThoiGian.setText(
-                    String.format(Locale.getDefault(), "%02d:%02d",
-                            seconds / 60, seconds % 60)
+                    String.format(Locale.getDefault(),
+                            "%02d:%02d", sec / 60, sec % 60)
             );
             handler.postDelayed(this, 1000);
         }
     };
+
+    // ================= UI EFFECT =================
+
+    private void setRecordingUI() {
+        btnVoiceToText.setImageResource(R.drawable.dangghiam);
+        btnVoiceToText.animate()
+                .scaleX(1.15f)
+                .scaleY(1.15f)
+                .setDuration(250)
+                .start();
+    }
+
+    private void setIdleUI() {
+        btnVoiceToText.setImageResource(R.drawable.nutghiam);
+        btnVoiceToText.animate()
+                .scaleX(1f)
+                .scaleY(1f)
+                .setDuration(250)
+                .start();
+    }
 }
