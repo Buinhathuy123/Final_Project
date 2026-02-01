@@ -33,9 +33,6 @@ android {
     kotlinOptions {
         jvmTarget = "11"
     }
-    buildFeatures {
-        mlModelBinding = true
-    }
 }
 
 dependencies {
@@ -45,24 +42,10 @@ dependencies {
     implementation(libs.activity)
     implementation(libs.constraintlayout)
     implementation(libs.core.ktx)
-    implementation("org.tensorflow:tensorflow-lite-support:0.4.4")
-    implementation("org.tensorflow:tensorflow-lite-metadata:0.4.4")
-    implementation("org.tensorflow:tensorflow-lite:2.16.1")
-    implementation("org.tensorflow:tensorflow-lite-api:2.16.1")
     testImplementation(libs.junit)
     androidTestImplementation(libs.ext.junit)
     androidTestImplementation(libs.espresso.core)
     implementation("com.squareup.retrofit2:retrofit:2.9.0")
     implementation("com.squareup.retrofit2:converter-gson:2.9.0")
     implementation("com.squareup.okhttp3:logging-interceptor:4.11.0")
-    implementation("com.google.mlkit:translate:17.0.2")
-
-}
-configurations.all {
-    resolutionStrategy {
-        // Lệnh này ép toàn bộ dự án (kể cả thư viện con) PHẢI dùng bản 2.16.1
-        // Không ai được phép dùng bản cũ hơn.
-        force("org.tensorflow:tensorflow-lite:2.16.1")
-        force("org.tensorflow:tensorflow-lite-api:2.16.1")
-    }
 }
