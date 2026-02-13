@@ -1,12 +1,14 @@
 import os
 import shutil
 import uuid
+import time
 from fastapi import FastAPI, UploadFile, File, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pymongo import MongoClient
 from random import sample
 from dotenv import load_dotenv
 from faster_whisper import WhisperModel
+
 
 load_dotenv()
 
@@ -89,6 +91,8 @@ def get_questions(size: int = 9):
 @app.post("/transcribe")
 async def transcribe(file: UploadFile = File(...)):
   try:
+    start_time = time.time()
+
     # Tạo tên file tạm
     filename = f"{uuid.uuid4()}.wav"
     file_path = os.path.join(UPLOAD_DIR, filename)
@@ -97,15 +101,20 @@ async def transcribe(file: UploadFile = File(...)):
     with open(file_path, "wb") as buffer:
       shutil.copyfileobj(file.file, buffer)
 
-    # Chạy Whisper
-    segments, _ = model.transcribe(file_path)
+    # Whisper tối ưu cho Render Free
+    segments, _ = model.transcribe(
+      file_path,
+      beam_size=1,        # Giảm tính toán
+      language="vi"       # Không cần auto detect
+    )
 
     text = ""
     for segment in segments:
       text += segment.text
 
-    # Xóa file sau khi xử lý
     os.remove(file_path)
+
+    print("⏱ Transcribe time:", time.time() - start_time)
 
     return {
       "ok": True,
