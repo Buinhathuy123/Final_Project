@@ -5,6 +5,7 @@ import android.os.Bundle;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -18,7 +19,8 @@ import java.util.List;
 public class ChonTracNghiemActivity extends AppCompatActivity {
 
     private TextView textCauHoi, textTienDo;
-    private LinearLayout answer1, answer2, answer3, answer4, progressBar, btnNext, fullTiendO;
+    private LinearLayout answer1, answer2, answer3, answer4;
+    private LinearLayout progressBar, btnNext, fullTiendO;
 
     private ImageView cb1, cb2, cb3, cb4;
 
@@ -28,6 +30,7 @@ public class ChonTracNghiemActivity extends AppCompatActivity {
     private int selectedScore = -1;
     private int fullWidth = 0;
 
+    // ================= LIFECYCLE =================
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -39,9 +42,11 @@ public class ChonTracNghiemActivity extends AppCompatActivity {
         fullTiendO.post(() -> fullWidth = fullTiendO.getWidth());
     }
 
+    // ================= INIT UI =================
     private void initViews() {
         textCauHoi = findViewById(R.id.textCauHoi);
         textTienDo = findViewById(R.id.texttiendo);
+
         progressBar = findViewById(R.id.thanhtiendo);
         fullTiendO = findViewById(R.id.fulltiendo);
 
@@ -57,23 +62,45 @@ public class ChonTracNghiemActivity extends AppCompatActivity {
         cb4 = answer4.findViewById(R.id.r1y9q5zgzvp4);
     }
 
+    // ================= LOAD QUESTIONS (ĐÃ SỬA) =================
     private void loadQuestions() {
+        textCauHoi.setText("Đang tải câu hỏi...");
+
         new QuestionRepository().loadRandomQuestions(new QuestionRepository.QuestionCallback() {
             @Override
             public void onSuccess(List<Question> randomQuestions) {
+
+                if (randomQuestions == null || randomQuestions.isEmpty()) {
+                    textCauHoi.setText("Không có câu hỏi từ server");
+                    return;
+                }
+
                 questions = randomQuestions;
+                currentIndex = 0;
+                totalScore = 0;
+
                 showQuestion();
             }
 
             @Override
             public void onFail(String error) {
-                textCauHoi.setText("Lỗi tải câu hỏi: " + error);
+                textCauHoi.setText("Lỗi tải câu hỏi");
+                Toast.makeText(
+                        ChonTracNghiemActivity.this,
+                        "❌ " + error,
+                        Toast.LENGTH_LONG
+                ).show();
             }
         });
     }
 
+    // ================= SHOW QUESTION =================
     private void showQuestion() {
         if (questions == null || questions.isEmpty()) return;
+        if (currentIndex >= questions.size()) {
+            goToResult();
+            return;
+        }
 
         selectedScore = -1;
         resetSelection();
@@ -81,18 +108,22 @@ public class ChonTracNghiemActivity extends AppCompatActivity {
         Question q = questions.get(currentIndex);
 
         textCauHoi.setText(q.getText());
-        textTienDo.setText("Câu " + (currentIndex + 1) + "/9");
+        textTienDo.setText("Câu " + (currentIndex + 1) + "/" + questions.size());
 
         if (fullWidth > 0) {
-            int progressWidth = (int) (((float) (currentIndex + 1) / 9) * fullWidth);
+            int progressWidth = (int) (((float) (currentIndex + 1) / questions.size()) * fullWidth);
             progressBar.getLayoutParams().width = progressWidth;
             progressBar.requestLayout();
         }
 
-        ((TextView) answer1.findViewById(R.id.rkfgxuhfnj)).setText(q.getAnswers().get(0).getText());
-        ((TextView) answer2.findViewById(R.id.ri1layallfa)).setText(q.getAnswers().get(1).getText());
-        ((TextView) answer3.findViewById(R.id.rml03nipvo3c)).setText(q.getAnswers().get(2).getText());
-        ((TextView) answer4.findViewById(R.id.rsxnewt2ggn9)).setText(q.getAnswers().get(3).getText());
+        ((TextView) answer1.findViewById(R.id.rkfgxuhfnj))
+                .setText(q.getAnswers().get(0).getText());
+        ((TextView) answer2.findViewById(R.id.ri1layallfa))
+                .setText(q.getAnswers().get(1).getText());
+        ((TextView) answer3.findViewById(R.id.rml03nipvo3c))
+                .setText(q.getAnswers().get(2).getText());
+        ((TextView) answer4.findViewById(R.id.rsxnewt2ggn9))
+                .setText(q.getAnswers().get(3).getText());
 
         answer1.setOnClickListener(v -> selectAnswer(0, q));
         answer2.setOnClickListener(v -> selectAnswer(1, q));
@@ -104,33 +135,20 @@ public class ChonTracNghiemActivity extends AppCompatActivity {
 
             totalScore += selectedScore;
             currentIndex++;
-
-            if (currentIndex >= 9) {
-                goToResult();
-            } else {
-                showQuestion();
-            }
+            showQuestion();
         });
     }
 
+    // ================= ANSWER =================
     private void selectAnswer(int index, Question q) {
         resetSelection();
-
         selectedScore = q.getAnswers().get(index).getScore();
 
         switch (index) {
-            case 0:
-                cb1.setImageResource(R.drawable.hieuung);
-                break;
-            case 1:
-                cb2.setImageResource(R.drawable.hieuung);
-                break;
-            case 2:
-                cb3.setImageResource(R.drawable.hieuung);
-                break;
-            case 3:
-                cb4.setImageResource(R.drawable.hieuung);
-                break;
+            case 0: cb1.setImageResource(R.drawable.hieuung); break;
+            case 1: cb2.setImageResource(R.drawable.hieuung); break;
+            case 2: cb3.setImageResource(R.drawable.hieuung); break;
+            case 3: cb4.setImageResource(R.drawable.hieuung); break;
         }
     }
 
@@ -141,6 +159,7 @@ public class ChonTracNghiemActivity extends AppCompatActivity {
         cb4.setImageResource(R.drawable.checkbox);
     }
 
+    // ================= RESULT =================
     private void goToResult() {
         Intent intent = new Intent(this, KetQuaTracNghiemActivity.class);
         intent.putExtra("score", totalScore);

@@ -5,8 +5,8 @@ import com.example.final_project.data.model.Question;
 import com.example.final_project.data.network.ApiService;
 import com.example.final_project.data.network.RetrofitClient;
 
-import java.util.List;
 import java.util.Collections;
+import java.util.List;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -21,14 +21,20 @@ public class QuestionRepository {
 
     public void loadRandomQuestions(QuestionCallback callback) {
 
-        ApiService api = RetrofitClient.getInstance().create(ApiService.class);
+        ApiService api = RetrofitClient
+                .getInstance()
+                .create(ApiService.class);
 
         api.getQuestions(9).enqueue(new Callback<ApiResponse>() {
+
             @Override
-            public void onResponse(Call<ApiResponse> call, Response<ApiResponse> response) {
+            public void onResponse(
+                    Call<ApiResponse> call,
+                    Response<ApiResponse> response
+            ) {
 
                 if (!response.isSuccessful() || response.body() == null) {
-                    callback.onFail("Không tải được câu hỏi (API lỗi)");
+                    callback.onFail("API lỗi: " + response.code());
                     return;
                 }
 
@@ -39,15 +45,23 @@ public class QuestionRepository {
                     return;
                 }
 
-                List<Question> list = data.getQuestions();
-                Collections.shuffle(list);
+                List<Question> questions = data.getQuestions();
 
-                callback.onSuccess(list);
+                if (questions.isEmpty()) {
+                    callback.onFail("Danh sách câu hỏi rỗng");
+                    return;
+                }
+
+                Collections.shuffle(questions);
+                callback.onSuccess(questions);
             }
 
             @Override
-            public void onFailure(Call<ApiResponse> call, Throwable t) {
-                callback.onFail("Lỗi kết nối: " + t.getMessage());
+            public void onFailure(
+                    Call<ApiResponse> call,
+                    Throwable t
+            ) {
+                callback.onFail("Lỗi mạng: " + t.getMessage());
             }
         });
     }

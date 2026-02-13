@@ -1,6 +1,9 @@
 fastapi
 uvicorn
+gunicorn
 python-dotenv
 pymongo
 python-multipart
 requests
+faster-whisper
+torch
