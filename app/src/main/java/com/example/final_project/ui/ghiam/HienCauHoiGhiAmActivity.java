@@ -1,10 +1,14 @@
 package com.example.final_project.ui.ghiam;
 
 import android.Manifest;
+import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.media.AudioFormat;
+import android.media.AudioRecord;
 import android.media.MediaRecorder;
 import android.os.Bundle;
 import android.os.Handler;
+import android.util.Log;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
@@ -12,205 +16,252 @@ import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
-import androidx.core.content.ContextCompat;
 
 import com.example.final_project.R;
 import com.example.final_project.data.model.Question;
-import com.example.final_project.data.repository.SpeechRepository;
+import com.example.final_project.data.repository.QuestionRepository;
 
 import java.io.File;
-import java.io.FileWriter;
+import java.io.FileOutputStream;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 
 public class HienCauHoiGhiAmActivity extends AppCompatActivity {
 
+    // ================= UI =================
     private TextView txtCauHoi, txtKetQuaNoi, txtThoiGian;
-    private ImageView btnRecord;
+    private ImageView btnVoiceToFile;
     private LinearLayout btnCauTiepTheo;
 
+    // ================= QUESTIONS =================
     private List<Question> questions;
     private int currentIndex = 0;
 
-    private MediaRecorder mediaRecorder;
-    private boolean isRecording = false;
-    private String audioFilePath;
-
+    // ================= TIMER =================
     private Handler handler = new Handler();
     private long startTime;
 
-    private static final int REQUEST_RECORD_AUDIO = 100;
+    // ================= AUDIO =================
+    private AudioRecord audioRecord;
+    private boolean isRecording = false;
+    private File pcmFile;
+
+    private static final int SAMPLE_RATE = 16000;
+    private static final int CHANNEL = AudioFormat.CHANNEL_IN_MONO;
+    private static final int ENCODING = AudioFormat.ENCODING_PCM_16BIT;
+
+    private static final int MIN_RECORD_TIME = 10; // giây
+    private static final int MAX_RECORD_TIME = 30; // giây
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_manhinhcho_ghiam);
 
-        initViews();
-        checkPermission();
-        loadQuestions();   // ✅ local questions
+        ActivityCompat.requestPermissions(
+                this,
+                new String[]{ Manifest.permission.RECORD_AUDIO },
+                1
+        );
 
-        btnRecord.setOnClickListener(v -> toggleRecording());
+        initViews();
+        loadQuestions();
+
+        btnVoiceToFile.setOnClickListener(v -> toggleRecording());
         btnCauTiepTheo.setOnClickListener(v -> nextQuestion());
     }
+
+    // ================= INIT =================
 
     private void initViews() {
         txtCauHoi = findViewById(R.id.textcauhoighiam);
         txtKetQuaNoi = findViewById(R.id.txtKetQuaNoi);
         txtThoiGian = findViewById(R.id.textthoigianghiam);
-        btnRecord = findViewById(R.id.btnbatdaughiam1);
+
+        btnVoiceToFile = findViewById(R.id.btnbatdaughiam2);
         btnCauTiepTheo = findViewById(R.id.btn_cautieptheo);
+
+        txtKetQuaNoi.setText("");
+        txtThoiGian.setText("00:00");
     }
 
-    private void checkPermission() {
-        if (ContextCompat.checkSelfPermission(this,
-                Manifest.permission.RECORD_AUDIO)
-                != PackageManager.PERMISSION_GRANTED) {
+    // ================= QUESTIONS =================
 
-            ActivityCompat.requestPermissions(this,
-                    new String[]{Manifest.permission.RECORD_AUDIO},
-                    REQUEST_RECORD_AUDIO);
-        }
-    }
-
-    // ================= LOCAL QUESTIONS =================
     private void loadQuestions() {
+        new QuestionRepository().loadRandomQuestions(
+                new QuestionRepository.QuestionCallback() {
+                    @Override
+                    public void onSuccess(List<Question> randomQuestions) {
+                        questions = randomQuestions;
+                        showQuestion();
+                    }
 
-        questions = new ArrayList<>();
+                    @Override
+                    public void onFail(String error) {
+                        Toast.makeText(
+                                HienCauHoiGhiAmActivity.this,
+                                "Không tải được câu hỏi",
+                                Toast.LENGTH_SHORT
+                        ).show();
+                    }
+                }
+        );
+    }
 
-        questions.add(new Question("Hôm nay bạn cảm thấy thế nào?", null));
-        questions.add(new Question("Bạn có ngủ ngon không?", null));
-        questions.add(new Question("Điều gì làm bạn vui nhất hôm nay?", null));
-        questions.add(new Question("Bạn có đang căng thẳng không?", null));
-        questions.add(new Question("Bạn mong muốn điều gì lúc này?", null));
-        questions.add(new Question("Bạn có thấy mệt mỏi không?", null));
-        questions.add(new Question("Bạn có muốn chia sẻ điều gì không?", null));
-        questions.add(new Question("Bạn cảm thấy tự tin về bản thân không?", null));
-        questions.add(new Question("Bạn có lo lắng điều gì gần đây?", null));
-        questions.add(new Question("Bạn muốn làm gì sau buổi này?", null));
-
-        currentIndex = 0;
+    private void showQuestion() {
         txtCauHoi.setText(questions.get(currentIndex).getText());
-    }
-
-    private void toggleRecording() {
-        if (!isRecording) startRecording();
-        else stopRecording();
-    }
-
-    private void startRecording() {
-        try {
-            isRecording = true;
-            startTimer();
-            btnRecord.setImageResource(R.drawable.dangghiam);
-            txtKetQuaNoi.setText("");
-
-            String time = new SimpleDateFormat(
-                    "yyyyMMdd_HHmmss",
-                    Locale.getDefault()).format(new Date());
-
-            File dir = new File(getExternalFilesDir(null), "audio");
-            if (!dir.exists()) dir.mkdirs();
-
-            File file = new File(dir, "answer_" + time + ".m4a");
-            audioFilePath = file.getAbsolutePath();
-
-            mediaRecorder = new MediaRecorder();
-            mediaRecorder.setAudioSource(MediaRecorder.AudioSource.MIC);
-            mediaRecorder.setOutputFormat(MediaRecorder.OutputFormat.MPEG_4);
-            mediaRecorder.setAudioEncoder(MediaRecorder.AudioEncoder.AAC);
-            mediaRecorder.setOutputFile(audioFilePath);
-            mediaRecorder.prepare();
-            mediaRecorder.start();
-
-        } catch (Exception e) {
-            e.printStackTrace();
-            Toast.makeText(this,"Lỗi ghi âm",Toast.LENGTH_SHORT).show();
-        }
-    }
-
-    private void stopRecording() {
-        try {
-            isRecording = false;
-            stopTimer();
-            btnRecord.setImageResource(R.drawable.nutghiam);
-
-            if (mediaRecorder != null) {
-                mediaRecorder.stop();
-                mediaRecorder.release();
-                mediaRecorder = null;
-            }
-
-            new SpeechRepository().transcribeAudio(
-                    new File(audioFilePath),
-                    new SpeechRepository.SpeechCallback() {
-
-                        @Override
-                        public void onSuccess(String text) {
-                            runOnUiThread(() -> {
-                                txtKetQuaNoi.setText(text);
-                                saveTextToFile(text);
-                            });
-                        }
-
-                        @Override
-                        public void onFail(String error) {
-                            runOnUiThread(() ->
-                                    Toast.makeText(
-                                            HienCauHoiGhiAmActivity.this,
-                                            error,
-                                            Toast.LENGTH_SHORT).show());
-                        }
-                    });
-
-        } catch (Exception e) {
-            e.printStackTrace();
-            Toast.makeText(this,"Lỗi khi dừng ghi âm",Toast.LENGTH_SHORT).show();
-        }
-    }
-
-    private void saveTextToFile(String text) {
-        try {
-            File dir = new File(getExternalFilesDir(null), "text");
-            if (!dir.exists()) dir.mkdirs();
-
-            String time = new SimpleDateFormat(
-                    "yyyyMMdd_HHmmss",
-                    Locale.getDefault()).format(new Date());
-
-            File file = new File(dir, "answer_" + time + ".txt");
-
-            FileWriter writer = new FileWriter(file);
-            writer.write(text);
-            writer.close();
-
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        txtKetQuaNoi.setText("");
     }
 
     private void nextQuestion() {
-
         if (isRecording) {
-            Toast.makeText(this,"Hãy dừng ghi âm trước",Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "Hãy dừng ghi âm trước", Toast.LENGTH_SHORT).show();
             return;
         }
 
         currentIndex++;
+        if (currentIndex >= questions.size()) {
+            Toast.makeText(this, "Đã hết câu hỏi", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        showQuestion();
+    }
 
-        if (currentIndex < questions.size()) {
-            txtCauHoi.setText(questions.get(currentIndex).getText());
-            txtKetQuaNoi.setText("");
+    // ================= RECORD =================
+
+    private void toggleRecording() {
+        if (!isRecording) {
+            startPCMRecording();
         } else {
-            Toast.makeText(this,"Đã hết câu hỏi",Toast.LENGTH_SHORT).show();
+            stopPCMRecording();
         }
     }
 
-    private void startTimer() {
+    private void startPCMRecording() {
+        int bufferSize = AudioRecord.getMinBufferSize(
+                SAMPLE_RATE, CHANNEL, ENCODING
+        );
+
+        if (ActivityCompat.checkSelfPermission(
+                this, Manifest.permission.RECORD_AUDIO
+        ) != PackageManager.PERMISSION_GRANTED) return;
+
+        audioRecord = new AudioRecord(
+                MediaRecorder.AudioSource.MIC,
+                SAMPLE_RATE,
+                CHANNEL,
+                ENCODING,
+                bufferSize
+        );
+
+        File dir = new File(getExternalFilesDir(null), "pcm");
+        if (!dir.exists()) dir.mkdirs();
+
+        String time = new SimpleDateFormat(
+                "yyyyMMdd_HHmmss", Locale.getDefault()
+        ).format(new Date());
+
+        pcmFile = new File(dir, "answer_" + time + ".pcm");
+
+        audioRecord.startRecording();
+        isRecording = true;
         startTime = System.currentTimeMillis();
+        startTimer();
+
+        new Thread(() -> writePCM(bufferSize)).start();
+        Toast.makeText(this, "🎙️ Đang ghi âm...", Toast.LENGTH_SHORT).show();
+    }
+
+    private void writePCM(int bufferSize) {
+        byte[] buffer = new byte[bufferSize];
+
+        try (FileOutputStream fos = new FileOutputStream(pcmFile)) {
+            while (isRecording) {
+                int read = audioRecord.read(buffer, 0, buffer.length);
+                if (read > 0) fos.write(buffer, 0, read);
+
+                long sec = (System.currentTimeMillis() - startTime) / 1000;
+                if (sec >= MAX_RECORD_TIME) {
+                    runOnUiThread(this::stopPCMRecording);
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void stopPCMRecording() {
+
+        // 1️⃣ Kiểm tra có đang ghi âm không
+        if (!isRecording) {
+            Log.d("RECORD", "stopPCMRecording: not recording");
+            return;
+        }
+
+        // 2️⃣ Dừng ghi âm
+        isRecording = false;
+
+        try {
+            if (audioRecord != null) {
+                audioRecord.stop();
+                audioRecord.release();
+                audioRecord = null;
+            }
+        } catch (Exception e) {
+            Log.e("RECORD", "Error stopping AudioRecord", e);
+        }
+
+        // 3️⃣ Tính thời gian ghi âm
+        long endTime = System.currentTimeMillis();
+        long recordDuration = endTime - startTime;
+        // ms
+
+        Log.d("RECORD", "Record duration = " + recordDuration + " ms");
+
+        // 4️⃣ Kiểm tra thời gian tối thiểu 30 giây
+        if (recordDuration < 10_000) {
+            Toast.makeText(
+                    this,
+                    "Ghi âm tối thiểu 10 giây",
+                    Toast.LENGTH_SHORT
+            ).show();
+
+            // ❌ KHÔNG start activity
+            // ❌ KHÔNG finish
+            return;
+        }
+
+        // 5️⃣ Kiểm tra file PCM có tồn tại không
+        if (pcmFile == null || !pcmFile.exists()) {
+            Toast.makeText(
+                    this,
+                    "Lỗi file ghi âm",
+                    Toast.LENGTH_SHORT
+            ).show();
+            return;
+        }
+
+        // 6️⃣ Chuyển sang màn hình kết quả
+        Intent intent = new Intent(
+                HienCauHoiGhiAmActivity.this,
+                ChoKetQuaGhiAmActivity.class
+        );
+        intent.putExtra("pcmPath", pcmFile.getAbsolutePath());
+        intent.putExtra("duration", recordDuration);
+
+        Log.d("RECORD", "Start ChoKetQuaGhiAmActivity");
+        startActivity(intent);
+
+        // 7️⃣ Đóng activity ghi âm SAU KHI startActivity
+        finish();
+    }
+
+
+    // ================= TIMER =================
+
+    private void startTimer() {
         handler.post(timerRunnable);
     }
 
@@ -222,15 +273,11 @@ public class HienCauHoiGhiAmActivity extends AppCompatActivity {
     private final Runnable timerRunnable = new Runnable() {
         @Override
         public void run() {
-            long sec =
-                    (System.currentTimeMillis() - startTime) / 1000;
-
+            long sec = (System.currentTimeMillis() - startTime) / 1000;
             txtThoiGian.setText(
                     String.format(Locale.getDefault(),
-                            "%02d:%02d",
-                            sec / 60,
-                            sec % 60));
-
+                            "%02d:%02d", sec / 60, sec % 60)
+            );
             handler.postDelayed(this, 1000);
         }
     };

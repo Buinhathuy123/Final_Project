@@ -46,11 +46,13 @@ dependencies {
     implementation(libs.constraintlayout)
     implementation(libs.core.ktx)
 
+
     // Retrofit
     implementation("com.squareup.retrofit2:retrofit:2.9.0")
     implementation("com.squareup.retrofit2:converter-gson:2.9.0")
     implementation("com.squareup.okhttp3:logging-interceptor:4.11.0")
     implementation("com.squareup.okhttp3:okhttp:4.12.0")
+    implementation("com.microsoft.onnxruntime:onnxruntime-android:1.17.3")
 
     // TensorFlow Lite
     implementation("org.tensorflow:tensorflow-lite:2.14.0")
