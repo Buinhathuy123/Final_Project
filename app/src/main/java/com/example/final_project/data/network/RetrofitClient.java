@@ -5,18 +5,21 @@ import retrofit2.converter.gson.GsonConverterFactory;
 
 public class RetrofitClient {
 
-    private static final String BASE_URL =
-            "https://final-project-1-3yp7.onrender.com/";
+    private static final String BASE_URL = "http://10.0.2.2:3000/";
 
-    private static Retrofit instance;
+    private static Retrofit retrofit;
 
     public static Retrofit getInstance() {
-        if (instance == null) {
-            instance = new Retrofit.Builder()
+
+        if (retrofit == null) {
+            retrofit = new Retrofit.Builder()
                     .baseUrl(BASE_URL)
                     .addConverterFactory(GsonConverterFactory.create())
                     .build();
         }
-        return instance;
+
+        return retrofit;
     }
 }
+// mongodb+srv://Buinhathuy12345DB:Lienquanmoba123@cluster0.f6hfvik.mongodb.net/phq_app?retryWrites=true&w=majority
+//mongodb+srv://Buinhathuy12345DB:Lienquanmoba123@cluster0.f6hfvik.mongodb.net/account?retryWrites=true&w=majority

@@ -6,8 +6,7 @@ import android.widget.ImageView;
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
 
-import com.example.final_project.ui.ketqua.KetQuaTracNghiemActivity;
-import com.example.final_project.ui.trangchu.TrangChuActicvity;
+import com.example.final_project.ui.dangnhap.ChonDangNhapActivity;
 
 public class MainActivity extends AppCompatActivity {
     private ImageView btnBatdau;
@@ -22,7 +21,7 @@ public class MainActivity extends AppCompatActivity {
         btnBatdau.setOnClickListener(v -> {
             Intent intent = new Intent(
                     MainActivity.this,
-                    TrangChuActicvity.class
+                    ChonDangNhapActivity.class
             );
             startActivity(intent);
             finish(); // đóng màn hình kết quả

@@ -33,7 +33,7 @@
 
         <!-- Activity mở đầu -->
         <activity
-            android:name=".ui.trangchu.TrangChuActicvity"
+            android:name=".MainActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -74,6 +74,19 @@
         <activity
             android:name=".ui.hinhanh.ChonHinhHinhAnhActivity"
             android:exported="false" />
+        <activity
+            android:name=".ui.dangnhap.DangKyActivity"
+            android:exported="false" />
+        <activity
+            android:name=".ui.dangnhap.ChonDangNhapActivity"
+            android:exported="false" />
+        <activity
+            android:name=".ui.dangnhap.DangNhapActivity"
+            android:exported="false" />
+        <activity
+            android:name=".ui.trangchu.TrangChuActivity"
+            android:exported="false" />
+
 
 
     </application>

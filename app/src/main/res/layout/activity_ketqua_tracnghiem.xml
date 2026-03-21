@@ -2,195 +2,150 @@
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:background="#FFFFFF"
+    android:background="#F6F8FB"
     android:orientation="vertical"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
+
     <ScrollView
-        android:id="@+id/rp0yoaun7t9k"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_weight="1"
-        android:background="@drawable/cr40bf5ede0">
+        android:layout_height="match_parent">
+
         <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:orientation="vertical">
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="20dp">
+
+            <!-- HEADER -->
             <LinearLayout
-                android:id="@+id/roqoy7c0jnvp"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="24dp"
-                android:layout_marginBottom="19dp"
-                android:layout_marginStart="24dp"
-                android:layout_marginEnd="9dp"
-                android:orientation="horizontal">
+                android:orientation="horizontal"
+                android:layout_marginBottom="20dp">
+
                 <ImageView
-                    android:id="@+id/rz9w0m1a126f"
-                    android:layout_width="48dp"
-                    android:layout_height="48dp"
+                    android:layout_width="42dp"
+                    android:layout_height="42dp"
                     android:src="@drawable/avatar"
-                    android:scaleType="fitXY"
-                    />
+                    android:scaleType="centerCrop"/>
+
                 <View
                     android:layout_width="0dp"
                     android:layout_height="0dp"
-                    android:layout_weight="1"
-                    />
+                    android:layout_weight="1"/>
+
                 <ImageView
-                    android:id="@+id/rn6r9ksdyld"
-                    android:layout_width="48dp"
-                    android:layout_height="48dp"
+                    android:layout_width="42dp"
+                    android:layout_height="42dp"
                     android:src="@drawable/chuong"
-                    android:scaleType="fitXY"
-                    />
+                    android:scaleType="centerCrop"/>
+
             </LinearLayout>
+
+            <!-- TITLE -->
+            <TextView
+                android:text="Bài kiểm tra trầm cảm PHQ-9"
+                android:textSize="22sp"
+                android:textStyle="bold"
+                android:textColor="#333333"
+                android:layout_marginBottom="6dp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"/>
+
+            <TextView
+                android:text="Kết quả đánh giá của bạn"
+                android:textSize="16sp"
+                android:textColor="#777777"
+                android:layout_marginBottom="25dp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"/>
+
+            <!-- PROGRESS -->
             <LinearLayout
-                android:id="@+id/rhjht5h1nl0b"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginBottom="19dp"
-                android:layout_marginStart="25dp"
-                android:layout_marginEnd="11dp"
-                android:orientation="horizontal">
-                <com.google.android.material.imageview.ShapeableImageView
-                    android:id="@+id/ro3v2kl2gcb"
-                    app:shapeAppearanceOverlay="@style/cr40"
-                    android:layout_width="69dp"
-                    android:layout_height="69dp"
-                    android:src="@drawable/back"
-                    android:scaleType="fitXY"
-                    />
+                android:layout_height="6dp"
+                android:background="#E0E0E0"
+                android:layout_marginBottom="25dp">
+
                 <View
-                    android:layout_width="0dp"
-                    android:layout_height="0dp"
-                    android:layout_weight="1"
-                    />
-                <com.google.android.material.imageview.ShapeableImageView
-                    android:id="@+id/r3gvbqsp6wvh"
-                    app:shapeAppearanceOverlay="@style/cr40"
-                    android:layout_width="60dp"
-                    android:layout_height="60dp"
-                    android:src="@drawable/menu"
-                    android:scaleType="fitXY"
-                    />
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:background="#7FA7FA"/>
             </LinearLayout>
+
             <TextView
-                android:id="@+id/rauaonabu5fm"
-                android:textColor="#4A4A4A"
-                android:textSize="20sp"
-                android:textStyle="bold"
-                android:layout_marginBottom="34dp"
-                android:layout_marginStart="16dp"
-                android:layout_height="wrap_content"
+                android:text="Câu hỏi 9 / 9"
+                android:textSize="14sp"
+                android:textColor="#777777"
+                android:layout_marginBottom="20dp"
                 android:layout_width="wrap_content"
-                android:text="Bộ câu hỏi đánh giá trầm cảm (PHQ-9)"
-                />
-            <TextView
-                android:id="@+id/rpdx2ivd4l2"
-                android:textColor="#4A4A4A"
-                android:textSize="16sp"
-                android:layout_marginBottom="26dp"
-                android:layout_marginStart="31dp"
-                android:layout_height="wrap_content"
-                android:layout_width="248dp"
-                android:text="Vui lòng chọn mức độ phù hợp nhất\nvới bạn trong 2 tuần qua"
-                />
+                android:layout_height="wrap_content"/>
+
+            <!-- RESULT CARD -->
             <LinearLayout
-                android:id="@+id/r97ala8vasxl"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="9dp"
-                android:layout_marginHorizontal="31dp"
-                android:orientation="vertical">
-                <LinearLayout
-                    android:id="@+id/r7dhs1gvisow"
+                android:orientation="vertical"
+                android:padding="20dp"
+                android:background="@drawable/result_card"
+                android:layout_marginBottom="30dp">
+
+                <TextView
+                    android:id="@+id/textketquatracnghiem"
+                    android:text="Trầm cảm mức độ trung bình"
+                    android:textSize="24sp"
+                    android:textStyle="bold"
+                    android:textColor="#333333"
+                    android:layout_marginBottom="10dp"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"/>
+
+                <TextView
+                    android:id="@+id/textloikhuyentracnghiem"
+                    android:text="Bạn nên cân nhắc trao đổi với bác sĩ hoặc chuyên gia sức khỏe tâm lý."
+                    android:textSize="16sp"
+                    android:textColor="#555555"
+                    android:layout_marginBottom="10dp"
                     android:layout_width="match_parent"
-                    android:layout_height="3dp"
-                    android:background="@drawable/cr40bd9d9d9"
-                    android:orientation="vertical">
-                </LinearLayout>
-                <LinearLayout
-                    android:id="@+id/rgig0pivdor"
-                    android:layout_width="match_parent"
-                    android:layout_height="3dp"
-                    android:background="@drawable/cr40b9775fa"
-                    android:orientation="vertical">
-                </LinearLayout>
+                    android:layout_height="wrap_content"/>
+
             </LinearLayout>
-            <TextView
-                android:id="@+id/rhrl4y9zrz4e"
-                android:textColor="#4A4A4A"
-                android:textSize="16sp"
-                android:layout_marginBottom="19dp"
-                android:layout_marginStart="31dp"
-                android:layout_height="wrap_content"
-                android:layout_width="wrap_content"
-                android:text="Câu 9/9"
-                />
-            <TextView
-                android:id="@+id/risitejdudwk"
-                android:textColor="#4A4A4A"
-                android:textSize="16sp"
-                android:layout_marginBottom="41dp"
-                android:layout_marginStart="31dp"
-                android:layout_height="wrap_content"
-                android:layout_width="wrap_content"
-                android:text="Kết quả đánh giá"
-                />
-            <TextView
-                android:id="@+id/textketquatracnghiem"
-                android:textColor="#4A4A4A"
-                android:textSize="24sp"
-                android:textStyle="bold"
-                android:layout_marginBottom="20dp"
-                android:layout_marginStart="31dp"
-                android:layout_height="wrap_content"
-                android:layout_width="wrap_content"
-                android:text="Trầm cảm trung bình"
-                />
-            <TextView
-                android:id="@+id/textloikhuyentracnghiem"
-                android:textColor="#4A4A4A"
-                android:textSize="16sp"
-                android:layout_marginBottom="159dp"
-                android:layout_marginStart="31dp"
-                android:layout_height="wrap_content"
-                android:layout_width="293dp"
-                android:text="Bạn nên trò chuyện với bác sĩ hoặc chuyên gia sức khoẻ tâm thần"
-                />
+
+            <!-- MUSIC SUGGESTION -->
             <TextView
                 android:id="@+id/textgoiyamnhac"
-                android:textColor="#C28989"
+                android:text="Xem gợi ý âm nhạc dành cho bạn"
                 android:textSize="16sp"
+                android:textColor="#7FA7FA"
+                android:textStyle="bold"
+                android:layout_gravity="center"
                 android:layout_marginBottom="40dp"
-                android:layout_marginStart="48dp"
-                android:layout_height="wrap_content"
                 android:layout_width="wrap_content"
-                android:text="Xem đề xuất bộ âm nhạc dành cho bạn"
-                />
+                android:layout_height="wrap_content"/>
+
+            <!-- FINISH BUTTON -->
             <LinearLayout
                 android:id="@+id/btnketthuctracnghiem"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:gravity="center_horizontal"
-                android:background="@drawable/cr20b7fa7b5"
-                android:paddingVertical="13dp"
-                android:layout_marginBottom="74dp"
-                android:layout_marginHorizontal="43dp"
+                android:layout_height="55dp"
+                android:gravity="center"
+                android:background="@drawable/button_finish"
                 android:clickable="true"
-                android:focusable="true"
-                android:orientation="vertical">
+                android:focusable="true">
+
                 <TextView
-                    android:id="@+id/r15n715ex9ts"
-                    android:textColor="#000000"
-                    android:textSize="20sp"
+                    android:text="Hoàn thành"
+                    android:textColor="#FFFFFF"
+                    android:textSize="18sp"
                     android:textStyle="bold"
-                    android:layout_height="wrap_content"
                     android:layout_width="wrap_content"
-                    android:text="Kết thúc"
-                    />
+                    android:layout_height="wrap_content"/>
+
             </LinearLayout>
+
         </LinearLayout>
+
     </ScrollView>
+
 </LinearLayout>

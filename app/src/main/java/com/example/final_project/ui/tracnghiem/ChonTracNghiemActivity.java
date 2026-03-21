@@ -2,6 +2,7 @@ package com.example.final_project.ui.tracnghiem;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.view.View;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
@@ -9,25 +10,29 @@ import android.widget.TextView;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.final_project.R;
-import com.example.final_project.data.model.Answer;
-import com.example.final_project.data.model.Question;
 import com.example.final_project.ui.ketqua.KetQuaTracNghiemActivity;
-
+import com.example.final_project.data.model.Question;
+import com.example.final_project.data.model.Answer;
 import java.util.Arrays;
 import java.util.List;
 
 public class ChonTracNghiemActivity extends AppCompatActivity {
 
     private TextView textCauHoi, textTienDo;
+
     private LinearLayout answer1, answer2, answer3, answer4;
-    private LinearLayout progressBar, btnNext, fullTiendO;
+    private LinearLayout btnNext, fullTiendO;
+
+    private View progressBar;
 
     private ImageView cb1, cb2, cb3, cb4;
 
     private List<Question> questions;
+
     private int currentIndex = 0;
     private int totalScore = 0;
     private int selectedScore = -1;
+
     private int fullWidth = 0;
 
     // ================= LIFECYCLE =================
@@ -58,10 +63,10 @@ public class ChonTracNghiemActivity extends AppCompatActivity {
 
         btnNext = findViewById(R.id.btnNext);
 
-        cb1 = answer1.findViewById(R.id.rfhcopeyua74);
-        cb2 = answer2.findViewById(R.id.rn2sqq8hs6s);
-        cb3 = answer3.findViewById(R.id.r2h3dli005i);
-        cb4 = answer4.findViewById(R.id.r1y9q5zgzvp4);
+        cb1 = findViewById(R.id.rfhcopeyua74);
+        cb2 = findViewById(R.id.rn2sqq8hs6s);
+        cb3 = findViewById(R.id.r2h3dli005i);
+        cb4 = findViewById(R.id.r1y9q5zgzvp4);
     }
 
     // ================= LOCAL QUESTIONS =================
@@ -69,89 +74,90 @@ public class ChonTracNghiemActivity extends AppCompatActivity {
 
         questions = Arrays.asList(
 
-                new Question("Bạn có ít hứng thú hoặc không còn thích làm việc gì?",
+                new Question("Ít hứng thú hoặc không còn thích làm những việc trước đây bạn từng thích?",
                         Arrays.asList(
                                 new Answer("Không bao giờ",0),
-                                new Answer("Vài ngày",1),
-                                new Answer("Hơn nửa số ngày",2),
-                                new Answer("Gần như mỗi ngày",3)
+                                new Answer("Thỉnh thoảng",1),
+                                new Answer("Thường xuyên",2),
+                                new Answer("Luôn luôn",3)
                         )),
 
-                new Question("Bạn có cảm thấy buồn, chán nản hoặc tuyệt vọng?",
+                new Question("Cảm thấy buồn bã, chán nản hoặc tuyệt vọng?",
                         Arrays.asList(
                                 new Answer("Không bao giờ",0),
-                                new Answer("Vài ngày",1),
-                                new Answer("Hơn nửa số ngày",2),
-                                new Answer("Gần như mỗi ngày",3)
+                                new Answer("Thỉnh thoảng",1),
+                                new Answer("Thường xuyên",2),
+                                new Answer("Luôn luôn",3)
                         )),
 
-                new Question("Bạn có khó ngủ, ngủ không sâu hoặc ngủ quá nhiều?",
+                new Question("Khó ngủ hoặc ngủ không sâu giấc?",
                         Arrays.asList(
                                 new Answer("Không bao giờ",0),
-                                new Answer("Vài ngày",1),
-                                new Answer("Hơn nửa số ngày",2),
-                                new Answer("Gần như mỗi ngày",3)
+                                new Answer("Thỉnh thoảng",1),
+                                new Answer("Thường xuyên",2),
+                                new Answer("Luôn luôn",3)
                         )),
 
-                new Question("Bạn có cảm thấy mệt mỏi hoặc thiếu năng lượng?",
+                new Question("Cảm thấy mệt mỏi hoặc thiếu năng lượng?",
                         Arrays.asList(
                                 new Answer("Không bao giờ",0),
-                                new Answer("Vài ngày",1),
-                                new Answer("Hơn nửa số ngày",2),
-                                new Answer("Gần như mỗi ngày",3)
+                                new Answer("Thỉnh thoảng",1),
+                                new Answer("Thường xuyên",2),
+                                new Answer("Luôn luôn",3)
                         )),
 
-                new Question("Bạn có ăn kém ngon hoặc ăn quá nhiều?",
+                new Question("Ăn uống kém hoặc ăn quá nhiều?",
                         Arrays.asList(
                                 new Answer("Không bao giờ",0),
-                                new Answer("Vài ngày",1),
-                                new Answer("Hơn nửa số ngày",2),
-                                new Answer("Gần như mỗi ngày",3)
+                                new Answer("Thỉnh thoảng",1),
+                                new Answer("Thường xuyên",2),
+                                new Answer("Luôn luôn",3)
                         )),
 
-                new Question("Bạn có cảm thấy bản thân tệ, thất bại, hoặc làm gia đình thất vọng?",
+                new Question("Cảm thấy bản thân tệ hoặc thất bại?",
                         Arrays.asList(
                                 new Answer("Không bao giờ",0),
-                                new Answer("Vài ngày",1),
-                                new Answer("Hơn nửa số ngày",2),
-                                new Answer("Gần như mỗi ngày",3)
+                                new Answer("Thỉnh thoảng",1),
+                                new Answer("Thường xuyên",2),
+                                new Answer("Luôn luôn",3)
                         )),
 
-                new Question("Bạn có khó tập trung khi đọc sách hoặc xem TV?",
+                new Question("Khó tập trung vào việc đọc, làm việc hoặc học tập?",
                         Arrays.asList(
                                 new Answer("Không bao giờ",0),
-                                new Answer("Vài ngày",1),
-                                new Answer("Hơn nửa số ngày",2),
-                                new Answer("Gần như mỗi ngày",3)
+                                new Answer("Thỉnh thoảng",1),
+                                new Answer("Thường xuyên",2),
+                                new Answer("Luôn luôn",3)
                         )),
 
-                new Question("Bạn có di chuyển hoặc nói chậm hơn bình thường, hoặc ngược lại quá bồn chồn?",
+                new Question("Di chuyển hoặc nói chuyện chậm hơn bình thường?",
                         Arrays.asList(
                                 new Answer("Không bao giờ",0),
-                                new Answer("Vài ngày",1),
-                                new Answer("Hơn nửa số ngày",2),
-                                new Answer("Gần như mỗi ngày",3)
+                                new Answer("Thỉnh thoảng",1),
+                                new Answer("Thường xuyên",2),
+                                new Answer("Luôn luôn",3)
                         )),
 
-                new Question("Bạn có cảm thấy lo lắng hoặc căng thẳng quá mức?",
+                new Question("Cảm thấy lo lắng hoặc bồn chồn?",
                         Arrays.asList(
                                 new Answer("Không bao giờ",0),
-                                new Answer("Vài ngày",1),
-                                new Answer("Hơn nửa số ngày",2),
-                                new Answer("Gần như mỗi ngày",3)
+                                new Answer("Thỉnh thoảng",1),
+                                new Answer("Thường xuyên",2),
+                                new Answer("Luôn luôn",3)
                         )),
 
-                new Question("Bạn có cảm thấy cuộc sống mất ý nghĩa hoặc thiếu động lực?",
+                new Question("Cảm thấy cuộc sống không còn nhiều ý nghĩa?",
                         Arrays.asList(
                                 new Answer("Không bao giờ",0),
-                                new Answer("Vài ngày",1),
-                                new Answer("Hơn nửa số ngày",2),
-                                new Answer("Gần như mỗi ngày",3)
+                                new Answer("Thỉnh thoảng",1),
+                                new Answer("Thường xuyên",2),
+                                new Answer("Luôn luôn",3)
                         ))
         );
 
         currentIndex = 0;
         totalScore = 0;
+
         showQuestion();
     }
 
@@ -172,8 +178,10 @@ public class ChonTracNghiemActivity extends AppCompatActivity {
         textTienDo.setText("Câu " + (currentIndex + 1) + "/" + questions.size());
 
         if (fullWidth > 0) {
+
             int progressWidth =
-                    (int)(((float)(currentIndex + 1)/questions.size())*fullWidth);
+                    (int)(((float)(currentIndex + 1) / questions.size()) * fullWidth);
+
             progressBar.getLayoutParams().width = progressWidth;
             progressBar.requestLayout();
         }
@@ -201,6 +209,7 @@ public class ChonTracNghiemActivity extends AppCompatActivity {
 
             totalScore += selectedScore;
             currentIndex++;
+
             showQuestion();
         });
     }
@@ -209,22 +218,34 @@ public class ChonTracNghiemActivity extends AppCompatActivity {
     private void selectAnswer(int index, Question q) {
 
         resetSelection();
+
         selectedScore = q.getAnswers().get(index).getScore();
 
         switch(index){
-            case 0: cb1.setImageResource(R.drawable.hieuung); break;
-            case 1: cb2.setImageResource(R.drawable.hieuung); break;
-            case 2: cb3.setImageResource(R.drawable.hieuung); break;
-            case 3: cb4.setImageResource(R.drawable.hieuung); break;
+
+            case 0:
+                cb1.setSelected(true);
+                break;
+
+            case 1:
+                cb2.setSelected(true);
+                break;
+
+            case 2:
+                cb3.setSelected(true);
+                break;
+
+            case 3:
+                cb4.setSelected(true);
+                break;
         }
     }
-
     private void resetSelection(){
 
-        cb1.setImageResource(R.drawable.checkbox);
-        cb2.setImageResource(R.drawable.checkbox);
-        cb3.setImageResource(R.drawable.checkbox);
-        cb4.setImageResource(R.drawable.checkbox);
+        cb1.setSelected(false);
+        cb2.setSelected(false);
+        cb3.setSelected(false);
+        cb4.setSelected(false);
     }
 
     // ================= RESULT =================
@@ -234,6 +255,7 @@ public class ChonTracNghiemActivity extends AppCompatActivity {
                 new Intent(this, KetQuaTracNghiemActivity.class);
 
         intent.putExtra("score", totalScore);
+
         startActivity(intent);
         finish();
     }
