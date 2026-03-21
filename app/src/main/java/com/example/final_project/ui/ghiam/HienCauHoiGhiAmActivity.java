@@ -259,6 +259,12 @@ public class HienCauHoiGhiAmActivity extends AppCompatActivity {
             return;
         }
 
+        // 5.5️⃣ Lưu kết quả nhận diện giọng nói (nếu có)
+        String finalSpeechText = txtKetQuaNoi.getText().toString();
+        if (!finalSpeechText.isEmpty()) {
+            saveTextToFile(finalSpeechText);
+        }
+
         // 6️⃣ Chuyển sang màn hình kết quả
         Intent intent = new Intent(
                 HienCauHoiGhiAmActivity.this,
@@ -310,7 +316,21 @@ public class HienCauHoiGhiAmActivity extends AppCompatActivity {
                 @Override public void onBufferReceived(byte[] buffer) {}
                 @Override public void onEndOfSpeech() {}
                 @Override public void onError(int error) {
-                    Log.e("STT", "Error: " + error);
+                    String message;
+                    switch (error) {
+                        case SpeechRecognizer.ERROR_AUDIO: message = "Lỗi âm thanh"; break;
+                        case SpeechRecognizer.ERROR_CLIENT: message = "Lỗi kết nối client"; break;
+                        case SpeechRecognizer.ERROR_INSUFFICIENT_PERMISSIONS: message = "Thiếu quyền ghi âm"; break;
+                        case SpeechRecognizer.ERROR_NETWORK: message = "Lỗi mạng"; break;
+                        case SpeechRecognizer.ERROR_NETWORK_TIMEOUT: message = "Mạng quá tải"; break;
+                        case SpeechRecognizer.ERROR_NO_MATCH: message = "Không nhận diện được giọng nói"; break;
+                        case SpeechRecognizer.ERROR_RECOGNIZER_BUSY: message = "Dịch vụ đang bận"; break;
+                        case SpeechRecognizer.ERROR_SERVER: message = "Lỗi máy chủ"; break;
+                        case SpeechRecognizer.ERROR_SPEECH_TIMEOUT: message = "Không nghe thấy tiếng"; break;
+                        default: message = "Lỗi không xác định: " + error; break;
+                    }
+                    Log.e("STT", "Error: " + message);
+                    runOnUiThread(() -> Toast.makeText(HienCauHoiGhiAmActivity.this, message, Toast.LENGTH_SHORT).show());
                 }
                 @Override
                 public void onResults(Bundle results) {
