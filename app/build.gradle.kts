@@ -35,10 +35,18 @@ android {
     }
     buildFeatures {
         mlModelBinding = true
+        viewBinding = true
     }
 }
 
 dependencies {
+    // Change 1.12.3 to 1.9.3
+    implementation("androidx.activity:activity:1.9.3")
+    // Change 1.17.0 to 1.15.0
+    implementation("androidx.core:core:1.15.0")
+    implementation("androidx.core:core-ktx:1.15.0")
+    // Change 1.0.2 to 1.0.0 (or remove this line if you aren't using Navigation Events)
+    implementation("androidx.navigationevent:navigationevent-android:1.0.0")
 
     implementation(libs.appcompat)
     implementation(libs.material)
@@ -46,16 +54,30 @@ dependencies {
     implementation(libs.constraintlayout)
     implementation(libs.core.ktx)
 
+<<<<<<< HEAD
+=======
+
+>>>>>>> 855f234afa5de6d5cf72fa76a3a92c668cb893a9
     // Retrofit
     implementation("com.squareup.retrofit2:retrofit:2.9.0")
     implementation("com.squareup.retrofit2:converter-gson:2.9.0")
     implementation("com.squareup.okhttp3:logging-interceptor:4.11.0")
     implementation("com.squareup.okhttp3:okhttp:4.12.0")
+<<<<<<< HEAD
+=======
+    implementation("com.microsoft.onnxruntime:onnxruntime-android:1.17.3")
+>>>>>>> 855f234afa5de6d5cf72fa76a3a92c668cb893a9
 
     // TensorFlow Lite
     implementation("org.tensorflow:tensorflow-lite:2.14.0")
     implementation("org.tensorflow:tensorflow-lite-support:0.4.4")
+<<<<<<< HEAD
     implementation("org.tensorflow:tensorflow-lite-metadata:0.4.4") // ⭐ BẮT BUỘC
+=======
+    implementation("org.tensorflow:tensorflow-lite-metadata:0.4.4") //
+    implementation("org.pytorch:pytorch_android_lite:1.13.1")
+    implementation("org.pytorch:pytorch_android_torchvision_lite:1.13.1")
+>>>>>>> 855f234afa5de6d5cf72fa76a3a92c668cb893a9
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.ext.junit)

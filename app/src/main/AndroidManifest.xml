@@ -60,6 +60,12 @@
         <activity
             android:name=".ui.ghiam.HienCauHoiGhiAmActivity"
             android:exported="false" />
+        <activity
+            android:name=".ui.ghiam.KetQuaGhiAmActivity"
+            android:exported="false" />
+        <activity
+            android:name=".ui.ghiam.ChoKetQuaGhiAmActivity"
+            android:exported="false" />
 
         <activity
             android:name=".ui.hinhanh.BatDauHinhAnhActivity"
