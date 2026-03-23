@@ -8,10 +8,13 @@ import android.media.AudioRecord;
 import android.media.MediaRecorder;
 import android.os.Bundle;
 import android.os.Handler;
-import android.speech.RecognitionListener;
-import android.speech.RecognizerIntent;
-import android.speech.SpeechRecognizer;
 import android.util.Log;
+import org.json.JSONObject;
+import java.io.FileInputStream;
+import java.io.InputStream;
+import org.vosk.Model;
+import org.vosk.Recognizer;
+import org.vosk.android.StorageService;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
@@ -61,9 +64,8 @@ public class HienCauHoiGhiAmActivity extends AppCompatActivity {
     private static final int MIN_RECORD_TIME = 10; // giây
     private static final int MAX_RECORD_TIME = 30; // giây
 
-    // ================= SPEECH TO TEXT =================
-    private SpeechRecognizer speechRecognizer;
-    private StringBuilder recognitionResult = new StringBuilder();
+    // ================= SPEECH TO TEXT (VOSK) =================
+    private Model voskModel;
     private File txtFile;
 
     @Override
@@ -78,7 +80,7 @@ public class HienCauHoiGhiAmActivity extends AppCompatActivity {
 
         initViews();
         loadQuestions();
-        initSpeechRecognizer();
+        initVoskModel();
 
         btnVoiceToFile.setOnClickListener(v -> toggleRecording());
         btnCauTiepTheo.setOnClickListener(v -> nextQuestion());
@@ -182,8 +184,6 @@ public class HienCauHoiGhiAmActivity extends AppCompatActivity {
         startTime = System.currentTimeMillis();
         startTimer();
 
-        startSpeechToText();
-
         new Thread(() -> writePCM(bufferSize)).start();
         Toast.makeText(this, "🎙️ Đang ghi âm...", Toast.LENGTH_SHORT).show();
     }
@@ -228,8 +228,6 @@ public class HienCauHoiGhiAmActivity extends AppCompatActivity {
             Log.e("RECORD", "Error stopping AudioRecord", e);
         }
 
-        stopSpeechToText();
-
         // 3️⃣ Tính thời gian ghi âm
         long endTime = System.currentTimeMillis();
         long recordDuration = endTime - startTime;
@@ -258,12 +256,54 @@ public class HienCauHoiGhiAmActivity extends AppCompatActivity {
             return;
         }
 
-        // 5.5️⃣ Lưu kết quả nhận diện giọng nói (nếu có)
-        String finalSpeechText = txtKetQuaNoi.getText().toString();
-        if (!finalSpeechText.isEmpty()) {
-            saveTextToFile(finalSpeechText);
+        // 5.5️⃣ Thực hiện STT bằng Vosk (chạy ngầm)
+        transcribeWithVosk(pcmFile, recordDuration);
+    }
+
+    private void transcribeWithVosk(File file, long recordDuration) {
+        if (voskModel == null) {
+            Log.e("VOSK", "Vosk model not loaded");
+            finishRecording(recordDuration);
+            return;
         }
 
+        Toast.makeText(this, "🔄 Đang chuyển giọng nói thành văn bản...", Toast.LENGTH_SHORT).show();
+
+        new Thread(() -> {
+            try (InputStream is = new FileInputStream(file)) {
+                Recognizer recognizer = new Recognizer(voskModel, 16000.0f);
+                byte[] buffer = new byte[4096];
+                int nread;
+                while ((nread = is.read(buffer)) != -1) {
+                    recognizer.acceptWaveform(buffer, nread);
+                }
+                String jsonResult = recognizer.getFinalResult();
+                // jsonResult format: { "text" : "hello world" }
+                String text = extractTextFromJson(jsonResult);
+
+                runOnUiThread(() -> {
+                    txtKetQuaNoi.setText(text);
+                    saveTextToFile(text);
+                    finishRecording(recordDuration);
+                });
+
+            } catch (Exception e) {
+                Log.e("VOSK", "Error during transcription", e);
+                runOnUiThread(() -> finishRecording(recordDuration));
+            }
+        }).start();
+    }
+
+    private String extractTextFromJson(String json) {
+        try {
+            JSONObject obj = new JSONObject(json);
+            return obj.optString("text", "");
+        } catch (Exception e) {
+            return "";
+        }
+    }
+
+    private void finishRecording(long recordDuration) {
         // 6️⃣ Chuyển sang màn hình kết quả
         Intent intent = new Intent(
                 HienCauHoiGhiAmActivity.this,
@@ -300,111 +340,17 @@ public class HienCauHoiGhiAmActivity extends AppCompatActivity {
         }
     };
 
-    // ================= SPEECH TO TEXT HELPERS =================
+    // ================= VOSK HELPERS =================
 
-    private void initSpeechRecognizer() {
-        if (SpeechRecognizer.isRecognitionAvailable(this)) {
-            speechRecognizer = SpeechRecognizer.createSpeechRecognizer(this);
-            speechRecognizer.setRecognitionListener(new RecognitionListener() {
-                @Override
-                public void onReadyForSpeech(Bundle params) {
-                }
-
-                @Override
-                public void onBeginningOfSpeech() {
-                }
-
-                @Override
-                public void onRmsChanged(float rmsdB) {
-                }
-
-                @Override
-                public void onBufferReceived(byte[] buffer) {
-                }
-
-                @Override
-                public void onEndOfSpeech() {
-                }
-
-                @Override
-                public void onError(int error) {
-                    String message;
-                    switch (error) {
-                        case SpeechRecognizer.ERROR_AUDIO:
-                            message = "Lỗi âm thanh";
-                            break;
-                        case SpeechRecognizer.ERROR_CLIENT:
-                            message = "Lỗi kết nối client";
-                            break;
-                        case SpeechRecognizer.ERROR_INSUFFICIENT_PERMISSIONS:
-                            message = "Thiếu quyền ghi âm";
-                            break;
-                        case SpeechRecognizer.ERROR_NETWORK:
-                            message = "Lỗi mạng";
-                            break;
-                        case SpeechRecognizer.ERROR_NETWORK_TIMEOUT:
-                            message = "Mạng quá tải";
-                            break;
-                        case SpeechRecognizer.ERROR_NO_MATCH:
-                            message = "Không nhận diện được giọng nói";
-                            break;
-                        case SpeechRecognizer.ERROR_RECOGNIZER_BUSY:
-                            message = "Dịch vụ đang bận";
-                            break;
-                        case SpeechRecognizer.ERROR_SERVER:
-                            message = "Lỗi máy chủ";
-                            break;
-                        case SpeechRecognizer.ERROR_SPEECH_TIMEOUT:
-                            message = "Không nghe thấy tiếng";
-                            break;
-                        default:
-                            message = "Lỗi không xác định: " + error;
-                            break;
-                    }
-                    Log.e("STT", "Error: " + message);
-                    runOnUiThread(
-                            () -> Toast.makeText(HienCauHoiGhiAmActivity.this, message, Toast.LENGTH_SHORT).show());
-                }
-
-                @Override
-                public void onResults(Bundle results) {
-                    ArrayList<String> matches = results.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION);
-                    if (matches != null && !matches.isEmpty()) {
-                        String text = matches.get(0);
-                        txtKetQuaNoi.setText(text);
-                        saveTextToFile(text);
-                    }
-                }
-
-                @Override
-                public void onPartialResults(Bundle partialResults) {
-                    ArrayList<String> matches = partialResults.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION);
-                    if (matches != null && !matches.isEmpty()) {
-                        txtKetQuaNoi.setText(matches.get(0));
-                    }
-                }
-
-                @Override
-                public void onEvent(int eventType, Bundle params) {
-                }
+    private void initVoskModel() {
+        StorageService.unpack(this, "model", "model",
+            (model) -> {
+                voskModel = model;
+                Log.d("VOSK", "Model loaded successfully");
+            },
+            (exception) -> {
+                Log.e("VOSK", "Failed to unpack model", exception);
             });
-        }
-    }
-
-    private void startSpeechToText() {
-        if (speechRecognizer != null) {
-            Intent intent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
-            intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
-            intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, Locale.getDefault());
-            intent.putExtra(RecognizerIntent.EXTRA_PARTIAL_RESULTS, true);
-            speechRecognizer.startListening(intent);
-        }
-    }
-
-    private void stopSpeechToText() {
-        if (speechRecognizer != null) {
-            speechRecognizer.stopListening();
-        }
     }
 
     private void saveTextToFile(String text) {
@@ -421,8 +367,5 @@ public class HienCauHoiGhiAmActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        if (speechRecognizer != null) {
-            speechRecognizer.destroy();
-        }
     }
 }
