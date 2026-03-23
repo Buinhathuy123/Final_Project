@@ -180,6 +180,19 @@
                     android:scaleType="fitXY"
                     /> -->
                 <ImageView
+<<<<<<< HEAD
+                    android:id="@+id/btnbatdaughiam1"
+                    app:shapeAppearanceOverlay="@style/cr40"
+                    android:layout_width="90dp"
+                    android:layout_height="90dp"
+                    android:layout_marginTop="26dp"
+                    android:layout_marginBottom="44dp"
+                    android:src="@drawable/nutghiam"
+                    android:scaleType="fitXY"
+                    />
+                <ImageView
+=======
+>>>>>>> 855f234afa5de6d5cf72fa76a3a92c668cb893a9
                     android:id="@+id/btnbatdaughiam2"
                     app:shapeAppearanceOverlay="@style/cr40"
                     android:layout_width="90dp"

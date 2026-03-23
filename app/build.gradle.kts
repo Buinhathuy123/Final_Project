@@ -54,6 +54,7 @@ dependencies {
     implementation(libs.constraintlayout)
     implementation(libs.core.ktx)
 
+    implementation("com.alphacephei:vosk-android:0.3.38")
 
     // Retrofit
     implementation("com.squareup.retrofit2:retrofit:2.9.0")
