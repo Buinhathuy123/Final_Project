@@ -1,0 +1,30 @@
+{
+  "name": "final_project",
+  "version": "1.0.0",
+  "description": "Backend for Final Project",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "nodemon server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Buinhathuy123/Final_Project.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/Buinhathuy123/Final_Project/issues"
+  },
+  "homepage": "https://github.com/Buinhathuy123/Final_Project#readme",
+  "dependencies": {
+    "body-parser": "^2.2.2",
+    "express": "^5.2.1",
+    "mongoose": "^9.2.4"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.0"
+  }
+}

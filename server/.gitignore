@@ -1,2 +1,33 @@
-node_modules
+# --- Android Studio / Gradle ---
+# Các tệp tin build và cache của Gradle
+.gradle/
+build/
+app/build/
+captures/
+
+# Tệp tin cấu hình cục bộ (Chứa đường dẫn SDK cá nhân, KHÔNG nên push lên)
+local.properties
+
+# Tệp tin hệ thống và cấu hình IDE
+.idea/
+*.iml
+.DS_Store (cho macOS)
+cmake/
+
+# --- Node.js (Thư mục server) ---
+# Loại bỏ các thư viện phụ thuộc
+node_modules/
+server/node_modules/
+
+# Tệp tin môi trường (Chứa thông tin bảo mật, API keys)
 .env
+server/.env
+
+# Nhật ký lỗi
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# --- Các tệp khác ---
+# Thư mục tải lên hoặc tệp tạm
+server/uploads/

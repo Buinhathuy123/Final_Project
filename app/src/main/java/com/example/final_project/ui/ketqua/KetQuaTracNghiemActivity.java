@@ -9,7 +9,7 @@ import android.widget.TextView;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.final_project.R;
-import com.example.final_project.ui.trangchu.TrangChuActicvity;
+import com.example.final_project.ui.trangchu.TrangChuActivity;
 
 public class KetQuaTracNghiemActivity extends AppCompatActivity {
 
@@ -31,17 +31,17 @@ public class KetQuaTracNghiemActivity extends AppCompatActivity {
         score = getIntent().getIntExtra("score", 0);
         showResult(score);
 
-        // 👉 Click kết thúc
+        // Finish button
         btnKetThuc.setOnClickListener(v -> {
             Intent intent = new Intent(
                     KetQuaTracNghiemActivity.this,
-                    TrangChuActicvity.class
+                    TrangChuActivity.class
             );
             startActivity(intent);
             finish();
         });
 
-        // 👉 Click mở link âm nhạc theo mức độ
+        // Open music suggestion
         txtGoiYAmNhac.setOnClickListener(v -> {
             String url = getMusicLinkByScore(score);
 
@@ -52,36 +52,48 @@ public class KetQuaTracNghiemActivity extends AppCompatActivity {
     }
 
     private void showResult(int score) {
-        String mucDo;
-        String khuyen;
+
+        String level;
+        String advice;
 
         if (score <= 4) {
-            mucDo = "Không trầm cảm";
-            khuyen = "Bạn hãy duy trì lối sống lành mạnh và trò chuyện với người thân khi cần.";
+
+            level = "Trầm cảm tối thiểu";
+            advice = "Sức khỏe tinh thần của bạn đang khá ổn định. Hãy tiếp tục duy trì lối sống lành mạnh và giữ kết nối với những người xung quanh.";
+
         } else if (score <= 9) {
-            mucDo = "Trầm cảm nhẹ";
-            khuyen = "Bạn hãy duy trì lối sống lành mạnh và trò chuyện với người thân khi cần.";
+
+            level = "Trầm cảm nhẹ";
+            advice = "Bạn có thể đang trải qua một chút tâm trạng buồn. Hãy thử thư giãn, tập thể dục hoặc chia sẻ với bạn bè và gia đình.";
+
         } else if (score <= 14) {
-            mucDo = "Trầm cảm trung bình";
-            khuyen = "Bạn nên trò chuyện với bác sĩ hoặc chuyên gia sức khoẻ tâm thần.";
+
+            level = "Trầm cảm trung bình";
+            advice = "Bạn nên cân nhắc trao đổi với chuyên gia tâm lý để nhận được sự tư vấn và hỗ trợ.";
+
         } else {
-            mucDo = "Trầm cảm nặng";
-            khuyen = "Bạn nên trò chuyện với bác sĩ hoặc chuyên gia sức khoẻ tâm thần.";
+
+            level = "Trầm cảm nặng";
+            advice = "Bạn nên tìm kiếm sự hỗ trợ từ bác sĩ hoặc chuyên gia sức khỏe tâm thần càng sớm càng tốt.";
+
         }
 
-        txtKetQua.setText(mucDo);
-        txtLoiKhuyen.setText(khuyen);
+        txtKetQua.setText(level);
+        txtLoiKhuyen.setText(advice);
     }
 
     private String getMusicLinkByScore(int score) {
 
         if (score <= 4) {
             return "https://open.spotify.com/playlist/2WLjVJrYUMcNWf8jKRzBpb";
-        } else if (score <= 9) {
+        }
+        else if (score <= 9) {
             return "https://open.spotify.com/album/11nFCEpoPyEvcb1ihgiKkK";
-        } else if (score <= 14) {
-            return "https://open.spotify.com/playlist/37i9dQZF1DX3Ogo9pFvBkY?si=8c7e9d7dfbde4f6b&nd=1&dlsi=9f08d478eba144df";
-        } else {
+        }
+        else if (score <= 14) {
+            return "https://open.spotify.com/playlist/37i9dQZF1DX3Ogo9pFvBkY";
+        }
+        else {
             return "https://open.spotify.com/album/5eUCj0ztGDmYXY417P7TGS";
         }
     }
