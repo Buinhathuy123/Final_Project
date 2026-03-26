@@ -18,7 +18,7 @@ cmake/
 # Loại bỏ các thư viện phụ thuộc
 node_modules/
 server/node_modules/
-app/node_modules/
+
 # Tệp tin môi trường (Chứa thông tin bảo mật, API keys)
 .env
 server/.env

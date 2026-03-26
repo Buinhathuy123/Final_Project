@@ -22,7 +22,7 @@ public class DepressionClassifier {
     public DepressionClassifier(Context context) {
         try {
             // 1. Load Model từ assets
-            interpreter = new Interpreter(loadModelFile(context, "model_depression.tflite"));
+            interpreter = new Interpreter(loadModelFile(context, "depression_model.tflite"));
             // 2. Load Từ điển từ assets
             loadWordDict(context);
         } catch (Exception e) {

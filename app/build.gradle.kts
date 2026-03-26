@@ -69,6 +69,7 @@ dependencies {
     implementation("org.tensorflow:tensorflow-lite-metadata:0.4.4") //
     implementation("org.pytorch:pytorch_android_lite:1.13.1")
     implementation("org.pytorch:pytorch_android_torchvision_lite:1.13.1")
+    implementation("com.google.mlkit:face-detection:16.1.6")
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.ext.junit)

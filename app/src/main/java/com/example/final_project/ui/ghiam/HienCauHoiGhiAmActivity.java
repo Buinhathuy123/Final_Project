@@ -9,12 +9,14 @@ import android.media.MediaRecorder;
 import android.os.Bundle;
 import android.os.Handler;
 import android.util.Log;
-import org.json.JSONObject;
-import java.io.FileInputStream;
-import java.io.InputStream;
-import org.vosk.Model;
-import org.vosk.Recognizer;
-import org.vosk.android.StorageService;
+
+import java.io.File;
+import java.io.FileOutputStream;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.List;
+import java.util.Locale;
+
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
@@ -26,16 +28,7 @@ import androidx.core.content.ContextCompat;
 
 import com.example.final_project.R;
 import com.example.final_project.data.model.Question;
-import com.example.final_project.data.repository.SpeechRepository;
-
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.FileWriter;
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.Locale;
+import com.example.final_project.data.repository.QuestionRepository;
 
 public class HienCauHoiGhiAmActivity extends AppCompatActivity {
 
@@ -51,36 +44,33 @@ public class HienCauHoiGhiAmActivity extends AppCompatActivity {
     // ================= TIMER =================
     private Handler handler = new Handler();
     private long startTime;
+    private long totalDuration = 0; // Lưu tổng thời gian của tất cả các câu
 
     // ================= AUDIO =================
     private AudioRecord audioRecord;
     private boolean isRecording = false;
-    private File pcmFile;
+    private File sessionPcmFile; // File lưu toàn bộ ghi âm để đưa vào Model AI dự đoán trầm cảm
 
     private static final int SAMPLE_RATE = 16000;
     private static final int CHANNEL = AudioFormat.CHANNEL_IN_MONO;
     private static final int ENCODING = AudioFormat.ENCODING_PCM_16BIT;
 
-    private static final int MIN_RECORD_TIME = 10; // giây
-    private static final int MAX_RECORD_TIME = 30; // giây
-
-    // ================= SPEECH TO TEXT (VOSK) =================
-    private Model voskModel;
-    private File txtFile;
+    private static final int MAX_RECORD_TIME = 30; // giây tối đa cho mỗi câu
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_manhinhcho_ghiam);
 
+        // Xin quyền ghi âm
         ActivityCompat.requestPermissions(
                 this,
                 new String[] { Manifest.permission.RECORD_AUDIO },
                 1);
 
         initViews();
+        initSessionFiles();
         loadQuestions();
-        initVoskModel();
 
         btnVoiceToFile.setOnClickListener(v -> toggleRecording());
         btnCauTiepTheo.setOnClickListener(v -> nextQuestion());
@@ -90,19 +80,18 @@ public class HienCauHoiGhiAmActivity extends AppCompatActivity {
         txtCauHoi = findViewById(R.id.textcauhoighiam);
         txtKetQuaNoi = findViewById(R.id.txtKetQuaNoi);
         txtThoiGian = findViewById(R.id.textthoigianghiam);
-
-        btnVoiceToFile = findViewById(R.id.btnbatdaughiam2);
+        btnVoiceToFile = findViewById(R.id.btnbatdaughiam);
         btnCauTiepTheo = findViewById(R.id.btn_cautieptheo);
     }
 
-    private void checkPermission() {
-        if (ContextCompat.checkSelfPermission(this,
-                Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
+    private void initSessionFiles() {
+        File dir = new File(getExternalFilesDir(null), "pcm");
+        if (!dir.exists()) dir.mkdirs();
 
-            ActivityCompat.requestPermissions(this,
-                    new String[] { Manifest.permission.RECORD_AUDIO },
-                    REQUEST_RECORD_AUDIO);
-        }
+        String time = new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(new Date());
+
+        // Khởi tạo file dùng chung cho toàn bộ quá trình trả lời (AI trầm cảm cần file này)
+        sessionPcmFile = new File(dir, "session_" + time + ".pcm");
     }
 
     // ================= LOCAL QUESTIONS =================
@@ -117,30 +106,55 @@ public class HienCauHoiGhiAmActivity extends AppCompatActivity {
 
                     @Override
                     public void onFail(String error) {
+                        // Thêm Log và in thẳng lỗi ra màn hình để biết tại sao
+                        Log.e("DATA_ERROR", "Lỗi tải câu hỏi: " + error);
                         Toast.makeText(
                                 HienCauHoiGhiAmActivity.this,
-                                "Không tải được câu hỏi",
-                                Toast.LENGTH_SHORT).show();
+                                "Lỗi: " + error,
+                                Toast.LENGTH_LONG).show();
                     }
                 });
     }
 
     private void showQuestion() {
         txtCauHoi.setText(questions.get(currentIndex).getText());
-        txtKetQuaNoi.setText("");
+        txtKetQuaNoi.setText("Hãy bấm nút tròn để bắt đầu trả lời"); // Trạng thái mặc định
     }
 
     private void nextQuestion() {
+        // --- BƯỚC BẢO VỆ CHỐNG SẬP APP ---
+        if (questions == null || questions.isEmpty()) {
+            Toast.makeText(this, "Đang tải câu hỏi hoặc dữ liệu bị lỗi, vui lòng thử lại sau.", Toast.LENGTH_SHORT).show();
+            return; // Chặn không cho chạy tiếp các lệnh bên dưới
+        }
+
         if (isRecording) {
-            Toast.makeText(this, "Hãy dừng ghi âm trước", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "Hãy dừng ghi âm trước khi qua câu tiếp theo", Toast.LENGTH_SHORT).show();
             return;
         }
 
         currentIndex++;
+
+        // Kiểm tra nếu đã trả lời xong tất cả các câu
         if (currentIndex >= questions.size()) {
-            Toast.makeText(this, "Đã hết câu hỏi", Toast.LENGTH_SHORT).show();
+
+            // Yêu cầu thời lượng tối thiểu tổng cộng 10s cho model
+            if (totalDuration < 10_000) {
+                Toast.makeText(this, "Tổng thời gian ghi âm các câu phải trên 10 giây", Toast.LENGTH_SHORT).show();
+                currentIndex--; // Lùi lại để người dùng có thể ghi âm thêm
+                return;
+            }
+
+            // Ghi âm xong hết -> Chuyển sang màn hình chờ kết quả của AI trầm cảm
+            Intent intent = new Intent(HienCauHoiGhiAmActivity.this, ChoKetQuaGhiAmActivity.class);
+            intent.putExtra("pcmPath", sessionPcmFile.getAbsolutePath());
+            intent.putExtra("duration", totalDuration);
+            startActivity(intent);
+            finish();
             return;
         }
+
+        // Hiện câu hỏi tiếp theo
         showQuestion();
     }
 
@@ -155,68 +169,46 @@ public class HienCauHoiGhiAmActivity extends AppCompatActivity {
     }
 
     private void startPCMRecording() {
-        int bufferSize = AudioRecord.getMinBufferSize(
-                SAMPLE_RATE, CHANNEL, ENCODING);
+        int bufferSize = AudioRecord.getMinBufferSize(SAMPLE_RATE, CHANNEL, ENCODING);
 
-        if (ActivityCompat.checkSelfPermission(
-                this, Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED)
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
+            Toast.makeText(this, "Chưa cấp quyền ghi âm!", Toast.LENGTH_SHORT).show();
             return;
+        }
 
-        audioRecord = new AudioRecord(
-                MediaRecorder.AudioSource.MIC,
-                SAMPLE_RATE,
-                CHANNEL,
-                ENCODING,
-                bufferSize);
-
-        File dir = new File(getExternalFilesDir(null), "pcm");
-        if (!dir.exists())
-            dir.mkdirs();
-
-        String time = new SimpleDateFormat(
-                "yyyyMMdd_HHmmss", Locale.getDefault()).format(new Date());
-
-        pcmFile = new File(dir, "answer_" + time + ".pcm");
-        txtFile = new File(dir, "answer_" + time + ".txt");
-
+        audioRecord = new AudioRecord(MediaRecorder.AudioSource.MIC, SAMPLE_RATE, CHANNEL, ENCODING, bufferSize);
         audioRecord.startRecording();
         isRecording = true;
         startTime = System.currentTimeMillis();
         startTimer();
 
+        // Cập nhật trạng thái
+        txtKetQuaNoi.setText("Đang ghi âm... ");
+
         new Thread(() -> writePCM(bufferSize)).start();
-        Toast.makeText(this, "🎙️ Đang ghi âm...", Toast.LENGTH_SHORT).show();
     }
 
     private void writePCM(int bufferSize) {
         byte[] buffer = new byte[bufferSize];
 
-        try (FileOutputStream fos = new FileOutputStream(pcmFile)) {
+        // Mở file ở chế độ append (true) để nối âm thanh các câu hỏi lại với nhau
+        try (FileOutputStream fosSession = new FileOutputStream(sessionPcmFile, true)) {
             while (isRecording) {
                 int read = audioRecord.read(buffer, 0, buffer.length);
-                if (read > 0)
-                    fos.write(buffer, 0, read);
+                if (read > 0) {
+                    fosSession.write(buffer, 0, read);
+                }
 
                 long sec = (System.currentTimeMillis() - startTime) / 1000;
                 if (sec >= MAX_RECORD_TIME) {
-                    runOnUiThread(this::stopPCMRecording);
+                    isRecording = false; // Tự động dừng nếu nói quá lâu
                 }
             }
         } catch (Exception e) {
             e.printStackTrace();
         }
-    }
 
-    private void stopPCMRecording() {
-
-        // 1️⃣ Kiểm tra có đang ghi âm không
-        if (!isRecording) {
-            Log.d("RECORD", "stopPCMRecording: not recording");
-            return;
-        }
-
-        // 2️⃣ Dừng ghi âm
-        isRecording = false;
+        // KHI isRecording = false, VÒNG LẶP KẾT THÚC, FILE ĐÃ ĐƯỢC LƯU VÀ ĐÓNG
 
         try {
             if (audioRecord != null) {
@@ -225,101 +217,27 @@ public class HienCauHoiGhiAmActivity extends AppCompatActivity {
                 audioRecord = null;
             }
         } catch (Exception e) {
-            Log.e("RECORD", "Error stopping AudioRecord", e);
+            Log.e("RECORD", "Lỗi dừng AudioRecord", e);
         }
 
-        // 3️⃣ Tính thời gian ghi âm
-        long endTime = System.currentTimeMillis();
-        long recordDuration = endTime - startTime;
-        // ms
+        long recordDuration = System.currentTimeMillis() - startTime;
+        totalDuration += recordDuration; // Cộng dồn thời gian tổng
 
-        Log.d("RECORD", "Record duration = " + recordDuration + " ms");
-
-        // 4️⃣ Kiểm tra thời gian tối thiểu 30 giây
-        if (recordDuration < 10_000) {
-            Toast.makeText(
-                    this,
-                    "Ghi âm tối thiểu 10 giây",
-                    Toast.LENGTH_SHORT).show();
-
-            // ❌ KHÔNG start activity
-            // ❌ KHÔNG finish
-            return;
-        }
-
-        // 5️⃣ Kiểm tra file PCM có tồn tại không
-        if (pcmFile == null || !pcmFile.exists()) {
-            Toast.makeText(
-                    this,
-                    "Lỗi file ghi âm",
-                    Toast.LENGTH_SHORT).show();
-            return;
-        }
-
-        // 5.5️⃣ Thực hiện STT bằng Vosk (chạy ngầm)
-        transcribeWithVosk(pcmFile, recordDuration);
+        runOnUiThread(() -> {
+            stopTimer(); // Dừng đồng hồ
+            txtKetQuaNoi.setText("Đã ghi âm xong câu này. Bạn có thể bấm Câu tiếp theo.");
+        });
     }
 
-    private void transcribeWithVosk(File file, long recordDuration) {
-        if (voskModel == null) {
-            Log.e("VOSK", "Vosk model not loaded");
-            finishRecording(recordDuration);
-            return;
-        }
+    private void stopPCMRecording() {
+        if (!isRecording) return;
 
-        Toast.makeText(this, "🔄 Đang chuyển giọng nói thành văn bản...", Toast.LENGTH_SHORT).show();
-
-        new Thread(() -> {
-            try (InputStream is = new FileInputStream(file)) {
-                Recognizer recognizer = new Recognizer(voskModel, 16000.0f);
-                byte[] buffer = new byte[4096];
-                int nread;
-                while ((nread = is.read(buffer)) != -1) {
-                    recognizer.acceptWaveform(buffer, nread);
-                }
-                String jsonResult = recognizer.getFinalResult();
-                // jsonResult format: { "text" : "hello world" }
-                String text = extractTextFromJson(jsonResult);
-
-                runOnUiThread(() -> {
-                    txtKetQuaNoi.setText(text);
-                    saveTextToFile(text);
-                    finishRecording(recordDuration);
-                });
-
-            } catch (Exception e) {
-                Log.e("VOSK", "Error during transcription", e);
-                runOnUiThread(() -> finishRecording(recordDuration));
-            }
-        }).start();
-    }
-
-    private String extractTextFromJson(String json) {
-        try {
-            JSONObject obj = new JSONObject(json);
-            return obj.optString("text", "");
-        } catch (Exception e) {
-            return "";
-        }
-    }
-
-    private void finishRecording(long recordDuration) {
-        // 6️⃣ Chuyển sang màn hình kết quả
-        Intent intent = new Intent(
-                HienCauHoiGhiAmActivity.this,
-                ChoKetQuaGhiAmActivity.class);
-        intent.putExtra("pcmPath", pcmFile.getAbsolutePath());
-        intent.putExtra("duration", recordDuration);
-
-        Log.d("RECORD", "Start ChoKetQuaGhiAmActivity");
-        startActivity(intent);
-
-        // 7️⃣ Đóng activity ghi âm SAU KHI startActivity
-        finish();
+        // Ra lệnh dừng ghi âm
+        isRecording = false;
+        txtKetQuaNoi.setText("Đang lưu âm thanh...");
     }
 
     // ================= TIMER =================
-
     private void startTimer() {
         handler.post(timerRunnable);
     }
@@ -340,32 +258,9 @@ public class HienCauHoiGhiAmActivity extends AppCompatActivity {
         }
     };
 
-    // ================= VOSK HELPERS =================
-
-    private void initVoskModel() {
-        StorageService.unpack(this, "model", "model",
-            (model) -> {
-                voskModel = model;
-                Log.d("VOSK", "Model loaded successfully");
-            },
-            (exception) -> {
-                Log.e("VOSK", "Failed to unpack model", exception);
-            });
-    }
-
-    private void saveTextToFile(String text) {
-        if (txtFile == null)
-            return;
-        try (FileWriter writer = new FileWriter(txtFile)) {
-            writer.write(text);
-            Log.d("STT", "Saved text to: " + txtFile.getAbsolutePath());
-        } catch (Exception e) {
-            Log.e("STT", "Error saving text file", e);
-        }
-    }
-
     @Override
     protected void onDestroy() {
         super.onDestroy();
+        stopTimer();
     }
 }

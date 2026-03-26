@@ -24,6 +24,8 @@ const AccountSchema = new mongoose.Schema({
 const Account = mongoose.model("accounts", AccountSchema)
 
 
+
+
 // ================= REGISTER =================
 app.post("/register", async (req, res) => {
 
