@@ -26,6 +26,11 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
+import org.json.JSONObject;
+import org.vosk.Model;
+import org.vosk.Recognizer;
+import org.vosk.android.StorageService;
+
 import com.example.final_project.R;
 import com.example.final_project.data.model.Question;
 import com.example.final_project.data.repository.QuestionRepository;
@@ -50,6 +55,7 @@ public class HienCauHoiGhiAmActivity extends AppCompatActivity {
     private AudioRecord audioRecord;
     private boolean isRecording = false;
     private File sessionPcmFile; // File lưu toàn bộ ghi âm để đưa vào Model AI dự đoán trầm cảm
+    private Model voskModel;
 
     private static final int SAMPLE_RATE = 16000;
     private static final int CHANNEL = AudioFormat.CHANNEL_IN_MONO;
@@ -144,6 +150,9 @@ public class HienCauHoiGhiAmActivity extends AppCompatActivity {
                 currentIndex--; // Lùi lại để người dùng có thể ghi âm thêm
                 return;
             }
+
+            // Ghi âm xong hết -> Thực hiện nhận diện giọng nói bằng Vosk trước khi chuyển màn hình
+            transcribePCMToText(sessionPcmFile);
 
             // Ghi âm xong hết -> Chuyển sang màn hình chờ kết quả của AI trầm cảm
             Intent intent = new Intent(HienCauHoiGhiAmActivity.this, ChoKetQuaGhiAmActivity.class);
@@ -262,5 +271,64 @@ public class HienCauHoiGhiAmActivity extends AppCompatActivity {
     protected void onDestroy() {
         super.onDestroy();
         stopTimer();
+    }
+
+    // ================= VOSK TRANSCRIPTION =================
+
+    private void transcribePCMToText(File pcmFile) {
+        runOnUiThread(() -> txtKetQuaNoi.setText("Đang chuyển đổi giọng nói thành văn bản..."));
+
+        if (voskModel == null) {
+            // "vosk-model-vn" is the folder name in assets.
+            // Ensure this folder exists in app/src/main/assets/
+            StorageService.unpack(this, "vosk-model-vn", "model",
+                    (model) -> {
+                        voskModel = model;
+                        recognizeAsync(pcmFile);
+                    },
+                    (exception) -> {
+                        Log.e("VOSK", "Error loading Vosk model: ", exception);
+                        runOnUiThread(() -> Toast.makeText(this, "Could not load Vosk model", Toast.LENGTH_SHORT).show());
+                    });
+        } else {
+            recognizeAsync(pcmFile);
+        }
+    }
+
+    private void recognizeAsync(File pcmFile) {
+        new Thread(() -> {
+            try (java.io.FileInputStream is = new java.io.FileInputStream(pcmFile)) {
+                Recognizer rec = new Recognizer(voskModel, SAMPLE_RATE);
+                byte[] buffer = new byte[4096];
+                int nread;
+                while ((nread = is.read(buffer)) != -1) {
+                    rec.acceptWaveform(buffer, nread);
+                }
+                String jsonResult = rec.getFinalResult();
+
+                // Extract text from JSON {"text": "..."}
+                JSONObject json = new JSONObject(jsonResult);
+                String text = json.optString("text", "");
+
+                saveTextToFile(pcmFile, text);
+
+                Log.d("VOSK", "Transcription finished: " + text);
+                runOnUiThread(() -> txtKetQuaNoi.setText("Đã lưu kết quả transcription vào file .txt"));
+            } catch (Exception e) {
+                Log.e("VOSK", "Recognition error: ", e);
+                runOnUiThread(() -> txtKetQuaNoi.setText("Lỗi chuyển đổi giọng nói!"));
+            }
+        }).start();
+    }
+
+    private void saveTextToFile(File pcmFile, String text) {
+        String txtFilePath = pcmFile.getAbsolutePath().replace(".pcm", ".txt");
+        File txtFile = new File(txtFilePath);
+        try (FileOutputStream fos = new FileOutputStream(txtFile)) {
+            fos.write(text.getBytes());
+            Log.d("VOSK", "Saved text to: " + txtFilePath);
+        } catch (Exception e) {
+            Log.e("VOSK", "Error saving txt file: ", e);
+        }
     }
 }
