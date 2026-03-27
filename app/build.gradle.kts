@@ -54,7 +54,7 @@ dependencies {
     implementation(libs.constraintlayout)
     implementation(libs.core.ktx)
 
-    implementation("com.alphacephei:vosk-android:0.3.38")
+
 
     // Retrofit
     implementation("com.squareup.retrofit2:retrofit:2.9.0")
@@ -70,6 +70,7 @@ dependencies {
     implementation("org.pytorch:pytorch_android_lite:1.13.1")
     implementation("org.pytorch:pytorch_android_torchvision_lite:1.13.1")
     implementation("com.google.mlkit:face-detection:16.1.6")
+    implementation(libs.vosk.android)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.ext.junit)

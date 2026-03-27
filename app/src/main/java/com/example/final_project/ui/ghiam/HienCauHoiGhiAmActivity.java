@@ -26,6 +26,11 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
+import org.json.JSONObject;
+import org.vosk.Model;
+import org.vosk.Recognizer;
+import org.vosk.android.StorageService;
+
 import com.example.final_project.R;
 import com.example.final_project.data.model.Question;
 import com.example.final_project.data.repository.QuestionRepository;
@@ -50,6 +55,7 @@ public class HienCauHoiGhiAmActivity extends AppCompatActivity {
     private AudioRecord audioRecord;
     private boolean isRecording = false;
     private File sessionPcmFile; // File lưu toàn bộ ghi âm để đưa vào Model AI dự đoán trầm cảm
+    private Model voskModel;
 
     private static final int SAMPLE_RATE = 16000;
     private static final int CHANNEL = AudioFormat.CHANNEL_IN_MONO;
@@ -86,11 +92,13 @@ public class HienCauHoiGhiAmActivity extends AppCompatActivity {
 
     private void initSessionFiles() {
         File dir = new File(getExternalFilesDir(null), "pcm");
-        if (!dir.exists()) dir.mkdirs();
+        if (!dir.exists())
+            dir.mkdirs();
 
         String time = new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(new Date());
 
-        // Khởi tạo file dùng chung cho toàn bộ quá trình trả lời (AI trầm cảm cần file này)
+        // Khởi tạo file dùng chung cho toàn bộ quá trình trả lời (AI trầm cảm cần file
+        // này)
         sessionPcmFile = new File(dir, "session_" + time + ".pcm");
     }
 
@@ -124,7 +132,8 @@ public class HienCauHoiGhiAmActivity extends AppCompatActivity {
     private void nextQuestion() {
         // --- BƯỚC BẢO VỆ CHỐNG SẬP APP ---
         if (questions == null || questions.isEmpty()) {
-            Toast.makeText(this, "Đang tải câu hỏi hoặc dữ liệu bị lỗi, vui lòng thử lại sau.", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "Đang tải câu hỏi hoặc dữ liệu bị lỗi, vui lòng thử lại sau.", Toast.LENGTH_SHORT)
+                    .show();
             return; // Chặn không cho chạy tiếp các lệnh bên dưới
         }
 
@@ -144,6 +153,10 @@ public class HienCauHoiGhiAmActivity extends AppCompatActivity {
                 currentIndex--; // Lùi lại để người dùng có thể ghi âm thêm
                 return;
             }
+
+            // Ghi âm xong hết -> Thực hiện nhận diện giọng nói bằng Vosk trước khi chuyển
+            // màn hình
+            transcribePCMToText(sessionPcmFile);
 
             // Ghi âm xong hết -> Chuyển sang màn hình chờ kết quả của AI trầm cảm
             Intent intent = new Intent(HienCauHoiGhiAmActivity.this, ChoKetQuaGhiAmActivity.class);
@@ -171,7 +184,8 @@ public class HienCauHoiGhiAmActivity extends AppCompatActivity {
     private void startPCMRecording() {
         int bufferSize = AudioRecord.getMinBufferSize(SAMPLE_RATE, CHANNEL, ENCODING);
 
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
+        if (ContextCompat.checkSelfPermission(this,
+                Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
             Toast.makeText(this, "Chưa cấp quyền ghi âm!", Toast.LENGTH_SHORT).show();
             return;
         }
@@ -230,7 +244,8 @@ public class HienCauHoiGhiAmActivity extends AppCompatActivity {
     }
 
     private void stopPCMRecording() {
-        if (!isRecording) return;
+        if (!isRecording)
+            return;
 
         // Ra lệnh dừng ghi âm
         isRecording = false;
@@ -262,5 +277,65 @@ public class HienCauHoiGhiAmActivity extends AppCompatActivity {
     protected void onDestroy() {
         super.onDestroy();
         stopTimer();
+    }
+
+    // ================= VOSK TRANSCRIPTION =================
+
+    private void transcribePCMToText(File pcmFile) {
+        runOnUiThread(() -> txtKetQuaNoi.setText("Đang chuyển đổi giọng nói thành văn bản..."));
+
+        if (voskModel == null) {
+            // "vosk-model-vn" is the folder name in assets.
+            // Ensure this folder exists in app/src/main/assets/
+            StorageService.unpack(this, "vosk-model-vn", "model",
+                    (model) -> {
+                        voskModel = model;
+                        recognizeAsync(pcmFile);
+                    },
+                    (exception) -> {
+                        Log.e("VOSK", "Error loading Vosk model: ", exception);
+                        runOnUiThread(
+                                () -> Toast.makeText(this, "Could not load Vosk model", Toast.LENGTH_SHORT).show());
+                    });
+        } else {
+            recognizeAsync(pcmFile);
+        }
+    }
+
+    private void recognizeAsync(File pcmFile) {
+        new Thread(() -> {
+            try (java.io.FileInputStream is = new java.io.FileInputStream(pcmFile)) {
+                Recognizer rec = new Recognizer(voskModel, SAMPLE_RATE);
+                byte[] buffer = new byte[4096];
+                int nread;
+                while ((nread = is.read(buffer)) != -1) {
+                    rec.acceptWaveForm(buffer, nread);
+                }
+                String jsonResult = rec.getFinalResult();
+
+                // Extract text from JSON {"text": "..."}
+                JSONObject json = new JSONObject(jsonResult);
+                String text = json.optString("text", "");
+
+                saveTextToFile(pcmFile, text);
+
+                Log.d("VOSK", "Transcription finished: " + text);
+                runOnUiThread(() -> txtKetQuaNoi.setText("Đã lưu kết quả transcription vào file .txt"));
+            } catch (Exception e) {
+                Log.e("VOSK", "Recognition error: ", e);
+                runOnUiThread(() -> txtKetQuaNoi.setText("Lỗi chuyển đổi giọng nói!"));
+            }
+        }).start();
+    }
+
+    private void saveTextToFile(File pcmFile, String text) {
+        String txtFilePath = pcmFile.getAbsolutePath().replace(".pcm", ".txt");
+        File txtFile = new File(txtFilePath);
+        try (FileOutputStream fos = new FileOutputStream(txtFile)) {
+            fos.write(text.getBytes());
+            Log.d("VOSK", "Saved text to: " + txtFilePath);
+        } catch (Exception e) {
+            Log.e("VOSK", "Error saving txt file: ", e);
+        }
     }
 }

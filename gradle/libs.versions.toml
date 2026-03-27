@@ -11,6 +11,7 @@ kotlin = "2.2.0"
 coreKtx = "1.17.0"
 androidx-activity = "1.9.3"
 androidx-core = "1.15.0"
+voskAndroid = "0.3.38"
 
 [libraries]
 junit = { group = "junit", name = "junit", version.ref = "junit" }
@@ -26,6 +27,7 @@ tensorflow-lite-metadata = { group = "org.tensorflow", name = "tensorflow-lite-m
 
 androidx-activity = { group = "androidx.activity", name = "activity", version.ref = "androidx-activity" }
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "androidx-core" }
+vosk-android = { group = "com.alphacephei", name = "vosk-android", version.ref = "voskAndroid" }
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
 kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
