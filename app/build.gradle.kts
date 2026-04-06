@@ -37,6 +37,9 @@ android {
         mlModelBinding = true
         viewBinding = true
     }
+    androidResources {
+        noCompress += "tflite"
+    }
 }
 
 dependencies {
@@ -64,8 +67,9 @@ dependencies {
     implementation("com.microsoft.onnxruntime:onnxruntime-android:1.17.3")
 
     // TensorFlow Lite
-    implementation("org.tensorflow:tensorflow-lite:2.14.0")
+    implementation("org.tensorflow:tensorflow-lite:2.16.1")
     implementation("org.tensorflow:tensorflow-lite-support:0.4.4")
+    implementation("org.tensorflow:tensorflow-lite-select-tf-ops:2.16.1")
     implementation("org.tensorflow:tensorflow-lite-metadata:0.4.4") //
     implementation("org.pytorch:pytorch_android_lite:1.13.1")
     implementation("org.pytorch:pytorch_android_torchvision_lite:1.13.1")

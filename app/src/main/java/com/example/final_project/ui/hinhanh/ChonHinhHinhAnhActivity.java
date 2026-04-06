@@ -5,8 +5,12 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
+import android.graphics.Canvas;
 import android.graphics.Color;
-import android.graphics.Rect; // Import thêm cái này để dùng Bounding Box
+import android.graphics.ColorMatrix;
+import android.graphics.ColorMatrixColorFilter;
+import android.graphics.Paint;
+import android.graphics.Rect;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
@@ -15,7 +19,6 @@ import android.view.View;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
@@ -180,33 +183,29 @@ public class ChonHinhHinhAnhActivity extends AppCompatActivity {
         faceDetector.process(image)
                 .addOnSuccessListener(faces -> {
                     if (faces != null && !faces.isEmpty()) {
-                        // 1. Lấy khuôn mặt đầu tiên tìm thấy
+                        // Lấy khuôn mặt đầu tiên tìm thấy
                         Face face = faces.get(0);
 
-                        // 2. Lấy tọa độ khung chữ nhật bao quanh khuôn mặt
+                        // Lấy tọa độ khung chữ nhật bao quanh khuôn mặt
                         Rect bounds = face.getBoundingBox();
 
-                        // 3. Xử lý an toàn: Đảm bảo tọa độ cắt không vượt ra ngoài viền ảnh
+                        // Xử lý an toàn: Đảm bảo tọa độ cắt không vượt ra ngoài viền ảnh
                         int x = Math.max(0, bounds.left);
                         int y = Math.max(0, bounds.top);
                         int width = Math.min(bitmap.getWidth() - x, bounds.width());
                         int height = Math.min(bitmap.getHeight() - y, bounds.height());
 
-                        // 4. DÙNG KÉO CẮT ẢNH: Tạo một tấm ảnh nhỏ chỉ chứa khuôn mặt
+                        // DÙNG KÉO CẮT ẢNH: Tạo một tấm ảnh nhỏ chỉ chứa khuôn mặt
                         Bitmap croppedFace = Bitmap.createBitmap(bitmap, x, y, width, height);
 
                         Log.d("MLKIT", "Đã cắt khuôn mặt thành công.");
 
-                        // (Tùy chọn) Hiển thị ảnh khuôn mặt ĐÃ CẮT lên màn hình cho xịn sò!
-                        imgHienThi.setImageBitmap(croppedFace);
-
-                        // 5. Đưa CÁI MẶT VỪA CẮT cho AI phân tích (Thay vì ảnh gốc)
+                        // Đưa CÁI MẶT VỪA CẮT cho AI phân tích
                         runAIModel(croppedFace);
 
                     } else {
-                        // ❌ KHÔNG PHẢI KHUÔN MẶT
                         Log.d("MLKIT", "Không tìm thấy khuôn mặt.");
-                        txtKetQua.setText("không phải ảnh khuôn mặt");
+                        txtKetQua.setText("Không phải ảnh khuôn mặt");
                         txtKetQua.setTextColor(Color.RED);
                     }
                 })
@@ -215,6 +214,26 @@ public class ChonHinhHinhAnhActivity extends AppCompatActivity {
                     txtKetQua.setText("Lỗi kiểm tra ảnh");
                     txtKetQua.setTextColor(Color.RED);
                 });
+    }
+
+    // --- HÀM MỚI: THU NHỎ VÀ ÉP THÀNH TRẮNG ĐEN ---
+    private Bitmap getLowResGrayscaleBitmap(Bitmap original, int width, int height) {
+        // 1. Hạ độ phân giải
+        Bitmap resizedBitmap = Bitmap.createScaledBitmap(original, width, height, true);
+
+        // 2. Ép sang trắng đen (Grayscale)
+        Bitmap grayscaleBitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
+        Canvas canvas = new Canvas(grayscaleBitmap);
+
+        ColorMatrix colorMatrix = new ColorMatrix();
+        colorMatrix.setSaturation(0); // Về 0 là trắng đen
+
+        Paint paint = new Paint();
+        paint.setColorFilter(new ColorMatrixColorFilter(colorMatrix));
+
+        canvas.drawBitmap(resizedBitmap, 0, 0, paint);
+
+        return grayscaleBitmap;
     }
 
     private void runAIModel(Bitmap bitmap) {
@@ -228,9 +247,14 @@ public class ChonHinhHinhAnhActivity extends AppCompatActivity {
             txtKetQua.setText("Đang phân tích tâm trạng...");
             txtKetQua.setTextColor(Color.BLACK);
 
-            // Thu nhỏ CÁI MẶT ĐÃ CẮT về đúng chuẩn 48x48
-            Bitmap resizedBitmap = Bitmap.createScaledBitmap(bitmap, 48, 48, true);
-            ByteBuffer inputBuffer = convertBitmapToGrayByteBuffer(resizedBitmap);
+            // 1. Đưa khuôn mặt vừa cắt qua hàm làm mờ (48x48) và ép trắng đen
+            Bitmap lowResGrayFace = getLowResGrayscaleBitmap(bitmap, 48, 48);
+
+            // 2. Hiển thị cái ảnh trắng đen 48x48 lên màn hình cho dễ nhìn (Debug)
+            runOnUiThread(() -> imgHienThi.setImageBitmap(lowResGrayFace));
+
+            // 3. Đưa vào Buffer
+            ByteBuffer inputBuffer = convertBitmapToGrayByteBuffer(lowResGrayFace);
             float[][] outputBuffer = new float[1][2];
 
             tflite.run(inputBuffer, outputBuffer);
@@ -240,10 +264,10 @@ public class ChonHinhHinhAnhActivity extends AppCompatActivity {
 
             if (probDepression > probNormal) {
                 txtKetQua.setTextColor(Color.RED);
-                txtKetQua.setText("CÓ DẤU HIỆU TRẦM CẢM\n(Độ tin cậy: " + String.format("%.1f%%", probDepression * 100) + ")");
+                txtKetQua.setText("CÓ DẤU HIỆU TRẦM CẢM");
             } else {
                 txtKetQua.setTextColor(Color.parseColor("#008000"));
-                txtKetQua.setText("TÂM TRẠNG BÌNH THƯỜNG\n(Độ tin cậy: " + String.format("%.1f%%", probNormal * 100) + ")");
+                txtKetQua.setText("TÂM TRẠNG BÌNH THƯỜNG");
             }
 
         } catch (Exception e) {
@@ -253,17 +277,20 @@ public class ChonHinhHinhAnhActivity extends AppCompatActivity {
         }
     }
 
+    // --- ĐÃ ĐƠN GIẢN HÓA VÌ ẢNH LÚC NÀY CHẮC CHẮN ĐÃ LÀ TRẮNG ĐEN ---
     private ByteBuffer convertBitmapToGrayByteBuffer(Bitmap bitmap) {
         ByteBuffer byteBuffer = ByteBuffer.allocateDirect(4 * 48 * 48 * 1);
         byteBuffer.order(ByteOrder.nativeOrder());
         int[] intValues = new int[48 * 48];
+
         bitmap.getPixels(intValues, 0, bitmap.getWidth(), 0, 0, bitmap.getWidth(), bitmap.getHeight());
 
         for (int pixelValue : intValues) {
             int r = (pixelValue >> 16) & 0xFF;
-            int g = (pixelValue >> 8) & 0xFF;
-            int b = pixelValue & 0xFF;
-            float normalizedPixel = (r + g + b) / 3.0f / 255.0f;
+
+            // THỬ NGHIỆM TRƯỜNG HỢP 1: Dải [-1, 1]
+            float normalizedPixel = (r - 127.5f) / 127.5f;
+
             byteBuffer.putFloat(normalizedPixel);
         }
         return byteBuffer;

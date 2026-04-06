@@ -1,10 +1,14 @@
 package com.example.final_project.ui.ghiam;
 
 import android.Manifest;
+import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.media.MediaRecorder;
 import android.os.Bundle;
 import android.os.Handler;
+import android.speech.RecognitionListener;
+import android.speech.RecognizerIntent;
+import android.speech.SpeechRecognizer;
+import android.util.Log;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
@@ -15,62 +19,55 @@ import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
 import com.example.final_project.R;
+import com.example.final_project.text.TFLiteHelper;
 
-import java.io.File;
-import java.text.SimpleDateFormat;
-import java.util.Date;
+import java.util.ArrayList;
 import java.util.Locale;
 
 public class NextStepGhiAmActivity extends AppCompatActivity {
 
-    // ================= UI =================
     private TextView txtCauHoi, txtKetQuaNoi, txtThoiGian;
     private ImageView btnVoice;
     private LinearLayout btnNext;
 
-    // ================= RECORD =================
-    private MediaRecorder recorder;
-    private boolean isRecording = false;
+    private SpeechRecognizer speechRecognizer;
+    private Intent speechIntent;
+    private boolean isListening = false;
 
-    // ================= TIMER =================
+    private StringBuilder fullTextBuilder = new StringBuilder();
+    private String lastRecognizedText = "";
+    private String answerFromQuestion1 = ""; // Nhận từ Activity trước
+
     private Handler handler = new Handler();
     private long startTime;
     private long recordSeconds = 0;
-
     private static final int MIN_RECORD_TIME = 10;
 
-    // ================= FILE =================
-    private File audioFile;
-
-    // ================= QUESTION =================
-    private String question = "Bạn có gặp khó khăn trong việc ngủ hoặc ngủ không sâu giấc trong thời gian gần đây không?";
+    private TFLiteHelper tfLiteHelper;
+    private final String question2 = "Gần đây bạn có gặp khó khăn trong việc đi vào giấc ngủ, ngủ không sâu giấc hoặc ngủ quá nhiều không?";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_manhinhcho_ghiam_2);
+        setContentView(R.layout.activity_manhinhcho_ghiam); // Dùng chung layout với câu 1
 
-        requestPermission();
+        // 1. Lấy dữ liệu từ Câu 1 truyền sang
+        answerFromQuestion1 = getIntent().getStringExtra("answer_question_1");
+
+        // 2. Khởi tạo AI
+        tfLiteHelper = new TFLiteHelper(this);
+
         initViews();
-        initFile();
+        initSpeech();
 
-        showQuestion();
+        // 3. Hiển thị câu hỏi 2
+        txtCauHoi.setText(question2);
+        txtKetQuaNoi.setText("Nhấn nút để trả lời câu hỏi 2");
 
-        btnVoice.setOnClickListener(v -> toggleRecording());
+        btnVoice.setOnClickListener(v -> toggleSpeech());
         btnNext.setOnClickListener(v -> finishTest());
     }
 
-    // ================= PERMISSION =================
-    private void requestPermission() {
-        ActivityCompat.requestPermissions(this,
-                new String[]{
-                        Manifest.permission.RECORD_AUDIO,
-                        Manifest.permission.WRITE_EXTERNAL_STORAGE
-                },
-                1);
-    }
-
-    // ================= INIT =================
     private void initViews() {
         txtCauHoi = findViewById(R.id.textcauhoighiam);
         txtKetQuaNoi = findViewById(R.id.txtKetQuaNoi);
@@ -79,143 +76,155 @@ public class NextStepGhiAmActivity extends AppCompatActivity {
         btnNext = findViewById(R.id.btn_cautieptheo);
     }
 
-    // ================= FILE =================
-    private void initFile() {
-        File dir = new File(getExternalFilesDir(null), "audio");
-        if (!dir.exists()) dir.mkdirs();
-
-        String time = new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault())
-                .format(new Date());
-
-        audioFile = new File(dir, "record_" + time + ".mp3");
-    }
-
-    // ================= RECORD =================
-    private void toggleRecording() {
-        if (!isRecording) {
-            startRecording();
-        } else {
-            stopRecording();
-        }
-    }
-
-    private void startRecording() {
-        if (ContextCompat.checkSelfPermission(this,
-                Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
-            Toast.makeText(this, "Chưa cấp quyền mic!", Toast.LENGTH_SHORT).show();
-            return;
+    private void initSpeech() {
+        if (speechRecognizer != null) {
+            speechRecognizer.destroy();
         }
 
-        try {
-            recorder = new MediaRecorder();
-            recorder.setAudioSource(MediaRecorder.AudioSource.MIC);
-            recorder.setOutputFormat(MediaRecorder.OutputFormat.MPEG_4);
-            recorder.setAudioEncoder(MediaRecorder.AudioEncoder.AAC);
-            recorder.setOutputFile(audioFile.getAbsolutePath());
+        speechRecognizer = SpeechRecognizer.createSpeechRecognizer(this);
+        speechIntent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
+        speechIntent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
+        speechIntent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, "vi-VN");
+        speechIntent.putExtra(RecognizerIntent.EXTRA_PARTIAL_RESULTS, true);
 
-            recorder.prepare();
-            recorder.start();
+        // 🔥 Cấu hình chống ngắt quãng (5 giây im lặng mới dừng)
+        speechIntent.putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_COMPLETE_SILENCE_LENGTH_MILLIS, 5000);
+        speechIntent.putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_POSSIBLY_COMPLETE_SILENCE_LENGTH_MILLIS, 5000);
 
-            isRecording = true;
-            setRecordingUI(true);
-
-            startTime = System.currentTimeMillis();
-            startTimer();
-
-            txtKetQuaNoi.setText("Đang ghi âm...");
-
-        } catch (Exception e) {
-            e.printStackTrace();
-            Toast.makeText(this, "Lỗi ghi âm!", Toast.LENGTH_SHORT).show();
-        }
-    }
-
-    private void stopRecording() {
-        try {
-            if (recorder != null) {
-                recorder.stop();
-                recorder.release();
-                recorder = null;
+        speechRecognizer.setRecognitionListener(new RecognitionListener() {
+            @Override
+            public void onReadyForSpeech(Bundle params) {
+                // Không xóa Text ở đây để tránh bị chớp màn hình khi restart mic
+                if (fullTextBuilder.length() == 0) {
+                    txtKetQuaNoi.setText("Đang nghe...");
+                }
             }
-        } catch (Exception ignored) {}
 
-        isRecording = false;
-        setRecordingUI(false);
-        stopTimer();
+            @Override
+            public void onPartialResults(Bundle partialResults) {
+                ArrayList<String> data = partialResults.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION);
+                if (data != null && !data.isEmpty()) {
+                    String currentPartial = data.get(0);
 
-        txtKetQuaNoi.setText("Đã ghi âm xong!");
+                    // 🔥 HIỂN THỊ: Kết hợp Builder (đã nói xong) + Partial (đang nói)
+                    String displayText = fullTextBuilder.toString() + " " + currentPartial;
+                    txtKetQuaNoi.setText(displayText.trim());
+
+                    // Cập nhật biến tạm để nếu bấm "Tiếp theo" ngay vẫn có dữ liệu
+                    lastRecognizedText = displayText.trim();
+                }
+            }
+
+            @Override
+            public void onResults(Bundle results) {
+                ArrayList<String> data = results.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION);
+                if (data != null && !data.isEmpty()) {
+                    String finalSegment = data.get(0);
+
+                    // 🔥 KIỂM TRA TRÙNG LẶP: Tránh việc một câu bị ghi vào Builder 2 lần
+                    if (!fullTextBuilder.toString().contains(finalSegment)) {
+                        fullTextBuilder.append(finalSegment).append(" ");
+                    }
+
+                    lastRecognizedText = fullTextBuilder.toString().trim();
+                    txtKetQuaNoi.setText(lastRecognizedText);
+                }
+
+                // Tự động nghe tiếp nếu người dùng chưa bấm dừng (isListening vẫn là true)
+                if (isListening) {
+                    speechRecognizer.startListening(speechIntent);
+                }
+            }
+
+            @Override
+            public void onError(int error) {
+                Log.e("SPEECH_FIX", "Error code: " + error);
+
+                // Nếu gặp lỗi (Mã 7: No match, Mã 8: Busy, Mã 6: Timeout)
+                if (isListening) {
+                    // Sử dụng Handler để restart sau 0.5s để hệ thống kịp giải phóng Mic
+                    new Handler(getMainLooper()).postDelayed(() -> {
+                        try {
+                            speechRecognizer.startListening(speechIntent);
+                        } catch (Exception e) {
+                            Log.e("SPEECH_FIX", "Restart failed");
+                        }
+                    }, 500);
+                }
+            }
+
+            @Override public void onBeginningOfSpeech() {}
+            @Override public void onRmsChanged(float rmsdB) {}
+            @Override public void onBufferReceived(byte[] buffer) {}
+            @Override public void onEndOfSpeech() {}
+            @Override public void onEvent(int eventType, Bundle params) {}
+        });
     }
 
-    private void forceStopRecording() {
-        if (isRecording) {
-            stopRecording();
-        }
-    }
-
-    // ================= UI =================
-    private void setRecordingUI(boolean recording) {
-        if (recording) {
+    private void toggleSpeech() {
+        if (!isListening) {
+            isListening = true;
+            fullTextBuilder.setLength(0);
             btnVoice.setImageResource(R.drawable.dangghiam);
+            startTime = System.currentTimeMillis();
+            handler.post(timerRunnable);
+            speechRecognizer.startListening(speechIntent);
         } else {
+            isListening = false;
             btnVoice.setImageResource(R.drawable.nutghiam);
+            handler.removeCallbacks(timerRunnable);
+            speechRecognizer.stopListening();
+            if (!lastRecognizedText.isEmpty()) txtKetQuaNoi.setText(lastRecognizedText);
         }
-    }
-
-    // ================= TIMER =================
-    private void startTimer() {
-        handler.post(timerRunnable);
-    }
-
-    private void stopTimer() {
-        handler.removeCallbacks(timerRunnable);
-        txtThoiGian.setText("00:00");
     }
 
     private final Runnable timerRunnable = new Runnable() {
         @Override
         public void run() {
             recordSeconds = (System.currentTimeMillis() - startTime) / 1000;
-
-            txtThoiGian.setText(String.format("%02d:%02d",
-                    recordSeconds / 60, recordSeconds % 60));
-
+            txtThoiGian.setText(String.format(Locale.getDefault(), "%02d:%02d", recordSeconds / 60, recordSeconds % 60));
             handler.postDelayed(this, 1000);
         }
     };
 
-    // ================= QUESTION =================
-    private void showQuestion() {
-        txtCauHoi.setText(question);
-        txtKetQuaNoi.setText("Nhấn nút để ghi âm câu trả lời");
-    }
-
-    // ================= FINISH =================
     private void finishTest() {
+        isListening = false;
+        speechRecognizer.stopListening();
 
-        forceStopRecording();
-
-        if (recordSeconds < MIN_RECORD_TIME) {
-            Toast.makeText(this,
-                    "Bạn phải ghi âm ít nhất 10 giây!",
-                    Toast.LENGTH_SHORT).show();
+        String answer2 = lastRecognizedText.trim();
+        if (answer2.isEmpty() || answer2.equalsIgnoreCase("Đang nghe câu 2...")) {
+            Toast.makeText(this, "Vui lòng trả lời câu 2!", Toast.LENGTH_SHORT).show();
             return;
         }
 
-        if (!audioFile.exists()) {
-            Toast.makeText(this, "Chưa có file ghi âm!", Toast.LENGTH_SHORT).show();
-            return;
+        // Gộp văn bản 2 câu để AI phân tích tổng thể
+        String finalCombinedText = answerFromQuestion1 + " " + answer2;
+        String result = tfLiteHelper.predict(finalCombinedText);
+
+        int finalScore = 0;
+        if (result != null) {
+            result = result.toLowerCase();
+            // Ánh xạ nhãn sang điểm số trung bình của từng khoảng
+            switch (result) {
+                case "normal":   finalScore = 2;  break; // Khoảng 0-4
+                case "minimal":  finalScore = 7;  break; // Khoảng 5-9
+                case "mild":     finalScore = 12; break; // Khoảng 10-14
+                case "moderate": finalScore = 17; break; // Khoảng 15-19
+                case "severe":   finalScore = 22; break; // Khoảng >19
+            }
         }
 
-        Toast.makeText(this,
-                "Đã hoàn thành!\nFile lưu tại:\n" + audioFile.getAbsolutePath(),
-                Toast.LENGTH_LONG).show();
-
-        // 👉 Nếu bạn muốn đi tiếp nữa thì thêm Intent ở đây
+        Intent intent = new Intent(this, KetQuaGhiAmActivity.class);
+        // 🔥 QUAN TRỌNG: Dùng chung Key "final_score" cho tất cả các Activity
+        intent.putExtra("final_score", finalScore);
+        intent.putExtra("result_tag", result);
+        startActivity(intent);
+        finish();
     }
 
     @Override
     protected void onDestroy() {
+        if (speechRecognizer != null) speechRecognizer.destroy();
         super.onDestroy();
-        forceStopRecording();
     }
 }
