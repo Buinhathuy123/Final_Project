@@ -19,6 +19,7 @@ public class DepressionClassifier {
     private Map<String, Integer> wordDict = new HashMap<>();
     private int MAX_LEN = 100;
 
+
     public DepressionClassifier(Context context) {
         try {
             // 1. Load Model từ assets
