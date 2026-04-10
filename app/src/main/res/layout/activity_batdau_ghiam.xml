@@ -3,110 +3,107 @@
     android:background="#F6F8FB"
     android:orientation="vertical"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:padding="20dp">
 
-    <ScrollView
+    <!-- HEADER -->
+    <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:fillViewport="true">
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:layout_marginBottom="24dp">
 
-        <LinearLayout
+        <ImageView
+            android:layout_width="45dp"
+            android:layout_height="45dp"
+            android:src="@drawable/avatar"/>
+
+        <View
+            android:layout_width="12dp"
+            android:layout_height="1dp"/>
+
+        <TextView
+            android:text="Ghi âm giọng nói"
+            android:textColor="#1F2A44"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"/>
+
+        <View
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="1dp"/>
+
+    </LinearLayout>
+
+
+    <!-- CARD -->
+    <ImageView
+        android:layout_width="wrap_content"
+        android:layout_height="70dp"
+        android:background="@drawable/bg_circle"
+        android:padding="6dp"
+        android:src="@drawable/back" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:background="@drawable/bg_card_white"
+        android:padding="20dp"
+        android:elevation="4dp"
+        android:layout_marginTop="20dp"
+        android:layout_marginBottom="20dp">
+
+        <ImageView
+            android:layout_width="60dp"
+            android:layout_height="60dp"
+            android:layout_gravity="center"
+            android:src="@drawable/mic"
+            android:layout_marginBottom="16dp"/>
+
+        <TextView
+            android:text="Đánh giá cảm xúc qua giọng nói"
+            android:textColor="#1F2A44"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:gravity="center"
+            android:layout_marginBottom="8dp"
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:orientation="vertical"
-            android:padding="20dp">
+            android:layout_height="wrap_content"/>
 
-            <!-- HEADER -->
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:layout_marginBottom="20dp">
+        <TextView
+            android:text="Hãy nói trong vài giây để hệ thống phân tích trạng thái của bạn"
+            android:textColor="#7B8194"
+            android:textSize="14sp"
+            android:gravity="center"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"/>
 
-                <ImageView
-                    android:layout_width="45dp"
-                    android:layout_height="45dp"
-                    android:src="@drawable/avatar"/>
+    </LinearLayout>
 
-                <View
-                    android:layout_width="0dp"
-                    android:layout_height="0dp"
-                    android:layout_weight="1"/>
 
-                <ImageView
-                    android:layout_width="45dp"
-                    android:layout_height="45dp"
-                    android:src="@drawable/chuong"/>
+    <!-- BUTTON -->
+    <LinearLayout
+        android:id="@+id/btn_batdauthuchienghiam"
+        android:layout_width="match_parent"
+        android:layout_height="58dp"
+        android:background="@drawable/button_start"
+        android:gravity="center"
+        android:elevation="6dp"
+        android:layout_marginTop="20dp"
+        android:clickable="true"
+        android:focusable="true">
 
-            </LinearLayout>
+        <TextView
+            android:text="Bắt đầu ghi âm"
+            android:textColor="#FFFFFF"
+            android:textSize="17sp"
+            android:textStyle="bold"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"/>
+    </LinearLayout>
 
-            <!-- BACK + MENU -->
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:layout_marginBottom="25dp">
-
-                <ImageView
-                    android:layout_width="60dp"
-                    android:layout_height="60dp"
-                    android:src="@drawable/back"/>
-
-                <View
-                    android:layout_width="0dp"
-                    android:layout_height="0dp"
-                    android:layout_weight="1"/>
-
-                <ImageView
-                    android:layout_width="55dp"
-                    android:layout_height="55dp"
-                    android:src="@drawable/menu"/>
-
-            </LinearLayout>
-
-            <!-- TITLE CARD -->
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:background="@drawable/result_card"
-                android:padding="20dp"
-                android:orientation="vertical"
-                android:layout_marginBottom="20dp">
-
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="Đánh giá trầm cảm thông qua giọng nói của bạn"
-                    android:textColor="#1F2A44"
-                    android:textSize="20sp"
-                    android:textStyle="bold"/>
-            </LinearLayout>
-
-            <!-- SPACER ĐẨY XUỐNG -->
-            <View
-                android:layout_width="match_parent"
-                android:layout_height="0dp"
-                android:layout_weight="1"/>
-
-            <!-- START BUTTON -->
-            <LinearLayout
-                android:id="@+id/btn_batdauthuchienghiam"
-                android:layout_width="match_parent"
-                android:layout_height="56dp"
-                android:background="@drawable/button_finish"
-                android:gravity="center"
-                android:clickable="true"
-                android:focusable="true">
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Bắt đầu"
-                    android:textColor="#FFFFFF"
-                    android:textSize="18sp"
-                    android:textStyle="bold"/>
-            </LinearLayout>
-
-        </LinearLayout>
-    </ScrollView>
 </LinearLayout>

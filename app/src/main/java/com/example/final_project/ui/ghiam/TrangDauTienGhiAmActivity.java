@@ -24,7 +24,7 @@ import com.example.final_project.text.TFLiteHelper;
 import java.util.ArrayList;
 import java.util.Locale;
 
-public class HienCauHoiGhiAmActivity extends AppCompatActivity {
+public class TrangDauTienGhiAmActivity extends AppCompatActivity {
 
     private TextView txtCauHoi, txtKetQuaNoi, txtThoiGian;
     private ImageView btnVoice;
@@ -56,6 +56,7 @@ public class HienCauHoiGhiAmActivity extends AppCompatActivity {
 
         requestPermission();
         initViews();
+        setNextButtonEnabled(false);
         initSpeech();
         showQuestion(); // Đảm bảo câu hỏi hiện ngay từ đầu
 
@@ -179,6 +180,9 @@ public class HienCauHoiGhiAmActivity extends AppCompatActivity {
 
         startTime = System.currentTimeMillis();
         handler.post(timerRunnable);
+
+        // 🔹 Ghi âm bắt đầu → disable button, màu xanh nhạt
+        setNextButtonEnabled(false);
     }
 
     private void stopListening() {
@@ -190,7 +194,10 @@ public class HienCauHoiGhiAmActivity extends AppCompatActivity {
         setRecordingUI(false);
         handler.removeCallbacks(timerRunnable);
 
-        // 🔥 FIX: Khi dừng, đảm bảo hiện text cuối cùng, không hiện "Đang nghe"
+        // 🔹 Ghi âm xong → enable button, màu xanh đậm
+        setNextButtonEnabled(true);
+
+        // Hiển thị text cuối cùng
         if (!lastRecognizedText.isEmpty()) {
             txtKetQuaNoi.setText(lastRecognizedText);
         } else {
@@ -227,9 +234,28 @@ public class HienCauHoiGhiAmActivity extends AppCompatActivity {
             return;
         }
 
-        // Truyền văn bản câu 1 sang Activity tiếp theo
-        Intent intent = new Intent(this, NextStepGhiAmActivity.class);
-        intent.putExtra("answer_question_1", answer1);
+        // 1. CHẠY MODEL TEXT (TFLite)
+        String result_text = tfLiteHelper.predict(answer1);
+
+        int score_text = 0;
+        if (result_text != null) {
+            result_text = result_text.toLowerCase();
+
+            switch (result_text) {
+                case "normal":   score_text = 2;  break;
+                case "minimal":  score_text = 7;  break;
+                case "mild":     score_text = 12; break;
+                case "moderate": score_text = 17; break;
+                case "severe":   score_text = 22; break;
+            }
+        }
+
+        // 2. TRUYỀN SANG TRANG 2
+        Intent intent = new Intent(this, TrangTiepTheoGhiAmActivity.class);
+
+        intent.putExtra("score_text", score_text);
+        intent.putExtra("result_text", result_text);
+
         startActivity(intent);
         finish();
     }
@@ -238,6 +264,9 @@ public class HienCauHoiGhiAmActivity extends AppCompatActivity {
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.RECORD_AUDIO}, 1);
         }
+    }
+    private void setNextButtonEnabled(boolean enabled) {
+        btnNext.setEnabled(enabled); // 🔥 QUAN TRỌNG
     }
 
     @Override

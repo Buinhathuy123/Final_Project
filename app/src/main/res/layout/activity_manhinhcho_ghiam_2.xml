@@ -34,6 +34,29 @@
                     android:layout_weight="1"/>
 
             </LinearLayout>
+            <!-- BACK + MENU -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_marginBottom="25dp">
+
+                <ImageView
+                    android:layout_width="60dp"
+                    android:layout_height="60dp"
+                    android:src="@drawable/back"/>
+
+                <View
+                    android:layout_width="0dp"
+                    android:layout_height="0dp"
+                    android:layout_weight="1"/>
+
+                <ImageView
+                    android:layout_width="55dp"
+                    android:layout_height="55dp"
+                    android:src="@drawable/menu"/>
+
+            </LinearLayout>
 
             <!-- CARD CÂU HỎI -->
             <LinearLayout
@@ -42,6 +65,7 @@
                 android:background="@drawable/result_card"
                 android:padding="20dp"
                 android:orientation="vertical"
+                android:layout_marginTop="-10dp"
                 android:layout_marginBottom="20dp">
 
                 <TextView
@@ -58,21 +82,67 @@
                     android:id="@+id/txtKetQuaNoi"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="Câu trả lời sẽ hiển thị ở đây"
+                    android:text="Nhấn nút để trả lời bằng giọng nói"
                     android:textColor="#6C7A92"
                     android:textSize="16sp"
                     android:background="#EEF1F7"
                     android:padding="12dp"/>
 
             </LinearLayout>
-
-            <!-- 🔥 SPACER ĐẨY XUỐNG DƯỚI -->
-            <View
+            <!-- NOTE CARD -->
+            <LinearLayout
                 android:layout_width="match_parent"
-                android:layout_height="0dp"
-                android:layout_weight="1"/>
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="16dp"
+                android:layout_marginTop="130dp"
+                android:layout_marginBottom="20dp">
 
-            <!-- TIMER -->
+                <!-- TITLE -->
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Lưu ý trước khi ghi âm"
+                    android:textColor="#1F2A44"
+                    android:textSize="17sp"
+                    android:textStyle="bold"
+                    android:layout_marginBottom="10dp"/>
+
+                <!-- ITEM 1 -->
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="• Đọc kỹ câu hỏi trước khi ghi âm"
+                    android:textColor="#6C7A92"
+                    android:textSize="15sp"
+                    android:layout_marginBottom="6dp"/>
+
+                <!-- ITEM 2 -->
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="• Trả lời đúng với cảm xúc của bạn"
+                    android:textColor="#6C7A92"
+                    android:textSize="15sp"
+                    android:layout_marginBottom="6dp"/>
+
+                <!-- ITEM 3 -->
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="• Thời lượng tối thiểu 15 giây"
+                    android:textColor="#6C7A92"
+                    android:textSize="15sp"
+                    android:layout_marginBottom="6dp"/>
+
+                <!-- ITEM 4 -->
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="• Không im lặng quá 5 giây"
+                    android:textColor="#6C7A92"
+                    android:textSize="15sp"/>
+            </LinearLayout>
             <TextView
                 android:id="@+id/textthoigianghiam"
                 android:layout_width="match_parent"
@@ -82,6 +152,7 @@
                 android:textSize="20sp"
                 android:textStyle="bold"
                 android:gravity="center"
+                android:layout_marginTop="-10dp"
                 android:layout_marginBottom="15dp"/>
 
             <!-- MIC -->
@@ -101,25 +172,7 @@
 
             </LinearLayout>
 
-            <!-- BUTTON -->
-            <LinearLayout
-                android:id="@+id/btn_cautieptheo"
-                android:layout_width="match_parent"
-                android:layout_height="56dp"
-                android:background="@drawable/button_finish"
-                android:gravity="center"
-                android:clickable="true"
-                android:focusable="true">
 
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Hoàn thành"
-                    android:textColor="#FFFFFF"
-                    android:textSize="17sp"
-                    android:textStyle="bold"/>
-
-            </LinearLayout>
 
         </LinearLayout>
     </ScrollView>

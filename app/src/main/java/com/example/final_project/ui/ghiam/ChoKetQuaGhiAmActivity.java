@@ -17,11 +17,10 @@ import java.io.File;
 public class ChoKetQuaGhiAmActivity extends AppCompatActivity {
 
     private static final int SAMPLE_RATE = 16000;
-    private static final int WINDOW_SEC = 8;
-    private static final int WINDOW_SIZE = SAMPLE_RATE * WINDOW_SEC;
 
+    private int scoreText;
+    private String resultText;
     private TextView txtTrangThai;
-    private TextView txtLoadingDots;
 
     private Handler loadingHandler = new Handler(Looper.getMainLooper());
     private boolean isLoading = true;
@@ -32,9 +31,12 @@ public class ChoKetQuaGhiAmActivity extends AppCompatActivity {
         setContentView(R.layout.activity_choketqua_ghiam);
 
         txtTrangThai = findViewById(R.id.txtTrangThai);
-        txtLoadingDots = findViewById(R.id.txtLoadingDots);
 
         Intent intent = getIntent();
+
+        scoreText = intent.getIntExtra("score_text", 0);
+        resultText = intent.getStringExtra("result_text");
+
         String pcmPath = intent.getStringExtra("pcmPath");
         long duration = intent.getLongExtra("duration", 0);
 
@@ -45,25 +47,57 @@ public class ChoKetQuaGhiAmActivity extends AppCompatActivity {
         }
 
         txtTrangThai.setText(
-                "Thời lượng ghi âm: " + (duration / 1000) + " giây\n"
+                "Thời lượng ghi âm: " + (duration / 1500) + " giây\n"
         );
-
-        startLoadingAnimation();
 
         new Thread(() -> {
             try {
-
                 long startTime = System.currentTimeMillis();
 
                 float[] raw = PCMUtilActivity.readPCM16(pcmPath);
-                float[] best8s = selectBestEnergyWindow(raw);
 
-                Log.d("DEBUG", "Audio length = " + best8s.length);
+                // ================= 1. TRIM ĐẦU / CUỐI =================
+                float[] processedAudio = trimSilenceEdges(raw, 0.02);
 
+                // fallback nếu trim rỗng
+                if (processedAudio.length == 0) {
+                    processedAudio = raw;
+                }
+
+
+
+                // ================= 3. CHECK IM LẶNG LIÊN TỤC 5s =================
+                if (hasLongSilence(processedAudio)) {
+
+                    isLoading = false;
+
+                    runOnUiThread(() -> {
+                        txtTrangThai.setText("Phát hiện im lặng quá lâu ");
+
+                        new Handler().postDelayed(() -> {
+                            Toast.makeText(
+                                    this,
+                                    "Vui lòng nói liên tục",
+                                    Toast.LENGTH_SHORT
+                            ).show();
+
+                            startActivity(new Intent(
+                                    this,
+                                    TrangTiepTheoGhiAmActivity.class
+                            ));
+                            finish();
+
+                        }, 3000);
+                    });
+
+                    return;
+                }
+
+                // ================= INFER =================
                 VoiceModelActivity inferencer =
                         VoiceModelActivity.getInstance(this);
 
-                float[] logits = inferencer.infer(best8s);
+                float[] logits = inferencer.infer(processedAudio);
 
                 long endTime = System.currentTimeMillis();
                 long inferTime = endTime - startTime;
@@ -90,6 +124,11 @@ public class ChoKetQuaGhiAmActivity extends AppCompatActivity {
                         i.putExtra("score0", logits[0]);
                         i.putExtra("score1", logits[1]);
                         i.putExtra("inferTime", inferTime);
+
+                        // TEXT
+                        i.putExtra("final_score", scoreText);
+                        i.putExtra("result_text", resultText);
+
                         startActivity(i);
                         finish();
                     }, 1000);
@@ -105,58 +144,59 @@ public class ChoKetQuaGhiAmActivity extends AppCompatActivity {
         }).start();
     }
 
-    // ================= LOADING DOTS =================
-    private void startLoadingAnimation() {
+    // ================= TRIM SILENCE =================
+    private float[] trimSilenceEdges(float[] audio, double threshold) {
+        int start = 0, end = audio.length - 1;
 
-        loadingHandler.post(new Runnable() {
-
-            int dotCount = 0;
-
-            @Override
-            public void run() {
-
-                if (!isLoading) return;
-
-                StringBuilder dots = new StringBuilder();
-                for (int i = 0; i < dotCount; i++) {
-                    dots.append("● ");
-                }
-
-                txtLoadingDots.setText(dots.toString());
-
-                dotCount++;
-                if (dotCount > 3) dotCount = 0;
-
-                loadingHandler.postDelayed(this, 400);
+        for (int i = 0; i < audio.length; i++) {
+            if (Math.abs(audio[i]) > threshold) {
+                start = i;
+                break;
             }
-        });
+        }
+
+        for (int i = audio.length - 1; i >= 0; i--) {
+            if (Math.abs(audio[i]) > threshold) {
+                end = i;
+                break;
+            }
+        }
+
+        if (end < start) return new float[0];
+
+        float[] trimmed = new float[end - start + 1];
+        System.arraycopy(audio, start, trimmed, 0, trimmed.length);
+        return trimmed;
     }
 
-    // ================= ENERGY WINDOW =================
-    private float[] selectBestEnergyWindow(float[] audio) {
+    // ================= DETECT SILENCE 5s =================
+    private boolean hasLongSilence(float[] audio) {
 
-        if (audio.length <= WINDOW_SIZE) {
-            float[] out = new float[WINDOW_SIZE];
-            System.arraycopy(audio, 0, out, 0, audio.length);
-            return out;
-        }
+        int frameSize = SAMPLE_RATE / 2; // 0.5s
+        int silentFrames = 0;
+        int maxSilentFrames = 10; // 5s
 
-        int bestStart = 0;
-        double bestEnergy = -1;
+        for (int i = 0; i + frameSize < audio.length; i += frameSize) {
 
-        for (int i = 0; i + WINDOW_SIZE <= audio.length; i += SAMPLE_RATE) {
             double energy = 0;
-            for (int j = i; j < i + WINDOW_SIZE; j++) {
+
+            for (int j = i; j < i + frameSize; j++) {
                 energy += audio[j] * audio[j];
             }
-            if (energy > bestEnergy) {
-                bestEnergy = energy;
-                bestStart = i;
+
+            energy /= frameSize;
+
+            if (energy < 1e-4) {
+                silentFrames++;
+            } else {
+                silentFrames = 0;
+            }
+
+            if (silentFrames >= maxSilentFrames) {
+                return true;
             }
         }
 
-        float[] best = new float[WINDOW_SIZE];
-        System.arraycopy(audio, bestStart, best, 0, WINDOW_SIZE);
-        return best;
+        return false;
     }
 }

@@ -181,7 +181,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="55dp"
                 android:gravity="center"
-                android:background="#4C6FFF">
+                android:background="@drawable/button_start">
 
                 <TextView
                     android:id="@+id/r6k9m0uac8v"

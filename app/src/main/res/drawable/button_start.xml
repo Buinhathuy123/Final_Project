@@ -1,0 +1,19 @@
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- DISABLED -->
+    <item android:state_enabled="false">
+        <shape>
+            <solid android:color="#A5B4FC"/> <!-- xanh nhạt -->
+            <corners android:radius="30dp"/>
+        </shape>
+    </item>
+
+    <!-- ENABLED -->
+    <item android:state_enabled="true">
+        <shape>
+            <solid android:color="#4C6FFF"/> <!-- xanh đậm -->
+            <corners android:radius="30dp"/>
+        </shape>
+    </item>
+
+</selector>

@@ -34,7 +34,7 @@
     <!-- GREETING -->
     <TextView
         android:id="@+id/txtHello"
-        android:text="Hi, User!"
+        android:text="Chào, User!"
         android:textColor="#2E3148"
         android:textSize="32sp"
         android:textStyle="bold"
@@ -45,7 +45,7 @@
     <TextView
         android:text="Hôm nay bạn cảm thấy thế nào?"
         android:textColor="#7B8194"
-        android:textSize="16sp"
+        android:textSize="20sp"
         android:layout_marginTop="8dp"
         android:layout_marginBottom="30dp"
         android:layout_width="wrap_content"
@@ -79,11 +79,14 @@
     </LinearLayout>
 
 
-    <!-- SPACER ĐẨY MENU XUỐNG -->
-    <View
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1"/>
+    <TextView
+        android:text="Chọn phương thức:"
+        android:textColor="#2E3148"
+        android:textSize="20sp"
+        android:textStyle="bold"
+        android:layout_marginBottom="12dp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"/>
 
 
     <!-- ICON MENU -->
@@ -91,7 +94,8 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        android:gravity="center">
+        android:gravity="center"
+        android:layout_marginTop="20dp">
 
         <!-- Ghi âm -->
         <LinearLayout
@@ -110,7 +114,7 @@
             <TextView
                 android:text="Ghi âm"
                 android:textColor="#2E3148"
-                android:textSize="12sp"
+                android:textSize="15sp"
                 android:layout_marginTop="6dp"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"/>
@@ -134,7 +138,7 @@
             <TextView
                 android:text="Hình ảnh"
                 android:textColor="#2E3148"
-                android:textSize="12sp"
+                android:textSize="15sp"
                 android:layout_marginTop="6dp"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"/>
@@ -158,7 +162,7 @@
             <TextView
                 android:text="Trắc nghiệm"
                 android:textColor="#2E3148"
-                android:textSize="12sp"
+                android:textSize="15sp"
                 android:layout_marginTop="6dp"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"/>

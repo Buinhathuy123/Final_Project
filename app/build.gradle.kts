@@ -74,6 +74,7 @@ dependencies {
     implementation("org.pytorch:pytorch_android_lite:1.13.1")
     implementation("org.pytorch:pytorch_android_torchvision_lite:1.13.1")
     implementation("com.google.mlkit:face-detection:16.1.6")
+    implementation("com.microsoft.onnxruntime:onnxruntime-android:1.18.0")
     implementation(libs.vosk.android)
 
     testImplementation(libs.junit)

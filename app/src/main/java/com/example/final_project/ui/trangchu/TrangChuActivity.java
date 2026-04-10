@@ -32,7 +32,7 @@ public class TrangChuActivity extends AppCompatActivity {
         String username = getIntent().getStringExtra("username");
 
         if (username != null) {
-            txtHello.setText("Hi, " + username);
+            txtHello.setText("Chào, " + username);
         }
 
         // Click sang màn hình Trắc nghiệm

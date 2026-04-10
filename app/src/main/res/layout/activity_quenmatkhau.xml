@@ -100,7 +100,7 @@
                 android:id="@+id/btn_send"
                 android:layout_width="match_parent"
                 android:layout_height="55dp"
-                android:background="#4C6FFF"
+                android:background="@drawable/button_start"
                 android:gravity="center"
                 android:layout_marginTop="30dp">
 

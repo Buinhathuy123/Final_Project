@@ -75,7 +75,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="55dp"
                 android:gravity="center"
-                android:background="@drawable/button_finish"
+                android:background="@drawable/button_start"
                 android:clickable="true"
                 android:focusable="true">
 

@@ -58,7 +58,7 @@
             android:exported="false" />
 
         <activity
-            android:name=".ui.ghiam.HienCauHoiGhiAmActivity"
+            android:name=".ui.ghiam.TrangDauTienGhiAmActivity"
             android:exported="false" />
         <activity
             android:name=".ui.ghiam.KetQuaGhiAmActivity"
@@ -90,7 +90,7 @@
             android:name=".ui.dangnhap.QuenMatKhauActivity"
             android:exported="false" />
         <activity
-            android:name=".ui.ghiam.NextStepGhiAmActivity"
+            android:name=".ui.ghiam.TrangTiepTheoGhiAmActivity"
             android:exported="false" />
 
 

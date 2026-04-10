@@ -133,7 +133,7 @@
                 android:id="@+id/rgijk6x1lbug"
                 android:layout_width="match_parent"
                 android:layout_height="56dp"
-                android:background="@drawable/button_finish"
+                android:background="@drawable/button_start"
                 android:gravity="center"
                 android:clickable="true"
                 android:focusable="true">
