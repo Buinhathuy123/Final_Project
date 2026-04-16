@@ -247,10 +247,10 @@ public class ChonHinhHinhAnhActivity extends AppCompatActivity {
             txtKetQua.setText("Đang phân tích tâm trạng...");
             txtKetQua.setTextColor(Color.BLACK);
 
-            // 1. Đưa khuôn mặt vừa cắt qua hàm làm mờ (48x48) và ép trắng đen
+
             Bitmap lowResGrayFace = getLowResGrayscaleBitmap(bitmap, 48, 48);
 
-            // 2. Đưa vào Buffer
+
             ByteBuffer inputBuffer = convertBitmapToGrayByteBuffer(lowResGrayFace);
             float[][] outputBuffer = new float[1][2];
 
@@ -262,12 +262,11 @@ public class ChonHinhHinhAnhActivity extends AppCompatActivity {
             boolean isDepressed = probDepression > probNormal;
             com.example.final_project.util.DataManager.saveFaceResult(this, isDepressed);
 
-            // --- TỰ ĐỘNG CHUYỂN SANG TRANG KẾT QUẢ ---
+
             Intent intent = new Intent(ChonHinhHinhAnhActivity.this, KetQuaHinhAnhActivity.class);
             intent.putExtra("isDepressed", isDepressed); // Gửi kết quả (True/False) sang trang kia
             startActivity(intent);
 
-            // Tắt màn hình chụp ảnh này đi
             finish();
 
         } catch (Exception e) {
@@ -277,7 +276,7 @@ public class ChonHinhHinhAnhActivity extends AppCompatActivity {
         }
     }
 
-    // --- ĐÃ ĐƠN GIẢN HÓA VÌ ẢNH LÚC NÀY CHẮC CHẮN ĐÃ LÀ TRẮNG ĐEN ---
+
     private ByteBuffer convertBitmapToGrayByteBuffer(Bitmap bitmap) {
         ByteBuffer byteBuffer = ByteBuffer.allocateDirect(4 * 48 * 48 * 1);
         byteBuffer.order(ByteOrder.nativeOrder());
