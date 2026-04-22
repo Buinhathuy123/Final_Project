@@ -29,7 +29,6 @@ import androidx.core.content.ContextCompat;
 
 import com.example.final_project.R;
 
-// --- CÁC IMPORT CHO GOOGLE ML KIT ---
 import com.google.mlkit.vision.common.InputImage;
 import com.google.mlkit.vision.face.Face;
 import com.google.mlkit.vision.face.FaceDetection;
@@ -58,6 +57,9 @@ public class ChonHinhHinhAnhActivity extends AppCompatActivity {
     private Interpreter tflite;
     private FaceDetector faceDetector;
 
+    // ⭐ THÊM USERNAME
+    private String username;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -65,6 +67,9 @@ public class ChonHinhHinhAnhActivity extends AppCompatActivity {
 
         initView();
         setupResultLaunchers();
+
+        // ⭐ NHẬN USERNAME TỪ MÀN TRƯỚC
+        username = getIntent().getStringExtra("username");
 
         // 1. Khởi tạo ML Kit Face Detector
         FaceDetectorOptions options = new FaceDetectorOptions.Builder()
@@ -77,8 +82,7 @@ public class ChonHinhHinhAnhActivity extends AppCompatActivity {
         // 2. LOAD MODEL TFLite
         try {
             File modelFile = getFileFromAssets(this, "model_48x48.tflite");
-            Interpreter.Options interpreterOptions = new Interpreter.Options();
-            tflite = new Interpreter(modelFile, interpreterOptions);
+            tflite = new Interpreter(modelFile);
         } catch (Exception e) {
             e.printStackTrace();
             txtKetQua.setText("Lỗi khởi tạo AI: " + e.getMessage());
@@ -163,70 +167,45 @@ public class ChonHinhHinhAnhActivity extends AppCompatActivity {
     private void hienThiVaDuDoan(Bitmap bitmap) {
         if (bitmap == null) return;
 
-        // Hiện ảnh gốc lên màn hình để người dùng xem trước
         imgHienThi.setImageBitmap(bitmap);
-
         txtKetQua.setText("Đang tìm khuôn mặt...");
         txtKetQua.setTextColor(Color.BLACK);
         kiemTraKhuonMatVaDuDoan(bitmap);
     }
 
-    // --- CẬP NHẬT TÍNH NĂNG TỰ ĐỘNG CẮT KHUÔN MẶT ---
     private void kiemTraKhuonMatVaDuDoan(Bitmap bitmap) {
-        if (faceDetector == null) {
-            runAIModel(bitmap);
-            return;
-        }
-
         InputImage image = InputImage.fromBitmap(bitmap, 0);
 
         faceDetector.process(image)
                 .addOnSuccessListener(faces -> {
                     if (faces != null && !faces.isEmpty()) {
-                        // Lấy khuôn mặt đầu tiên tìm thấy
-                        Face face = faces.get(0);
 
-                        // Lấy tọa độ khung chữ nhật bao quanh khuôn mặt
+                        Face face = faces.get(0);
                         Rect bounds = face.getBoundingBox();
 
-                        // Xử lý an toàn: Đảm bảo tọa độ cắt không vượt ra ngoài viền ảnh
                         int x = Math.max(0, bounds.left);
                         int y = Math.max(0, bounds.top);
                         int width = Math.min(bitmap.getWidth() - x, bounds.width());
                         int height = Math.min(bitmap.getHeight() - y, bounds.height());
 
-                        // DÙNG KÉO CẮT ẢNH: Tạo một tấm ảnh nhỏ chỉ chứa khuôn mặt
                         Bitmap croppedFace = Bitmap.createBitmap(bitmap, x, y, width, height);
 
-                        Log.d("MLKIT", "Đã cắt khuôn mặt thành công.");
-
-                        // Đưa CÁI MẶT VỪA CẮT cho AI phân tích
                         runAIModel(croppedFace);
 
                     } else {
-                        Log.d("MLKIT", "Không tìm thấy khuôn mặt.");
                         txtKetQua.setText("Không phải ảnh khuôn mặt");
                         txtKetQua.setTextColor(Color.RED);
                     }
-                })
-                .addOnFailureListener(e -> {
-                    Log.e("MLKIT", "Lỗi khi phát hiện khuôn mặt", e);
-                    txtKetQua.setText("Lỗi kiểm tra ảnh");
-                    txtKetQua.setTextColor(Color.RED);
                 });
     }
 
-    // --- HÀM MỚI: THU NHỎ VÀ ÉP THÀNH TRẮNG ĐEN ---
     private Bitmap getLowResGrayscaleBitmap(Bitmap original, int width, int height) {
-        // 1. Hạ độ phân giải
         Bitmap resizedBitmap = Bitmap.createScaledBitmap(original, width, height, true);
-
-        // 2. Ép sang trắng đen (Grayscale)
         Bitmap grayscaleBitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
-        Canvas canvas = new Canvas(grayscaleBitmap);
 
+        Canvas canvas = new Canvas(grayscaleBitmap);
         ColorMatrix colorMatrix = new ColorMatrix();
-        colorMatrix.setSaturation(0); // Về 0 là trắng đen
+        colorMatrix.setSaturation(0);
 
         Paint paint = new Paint();
         paint.setColorFilter(new ColorMatrixColorFilter(colorMatrix));
@@ -237,75 +216,60 @@ public class ChonHinhHinhAnhActivity extends AppCompatActivity {
     }
 
     private void runAIModel(Bitmap bitmap) {
-        if (tflite == null) {
-            txtKetQua.setText("Lỗi: Chưa load được AI.");
-            txtKetQua.setTextColor(Color.RED);
-            return;
-        }
+        if (tflite == null) return;
 
         try {
             txtKetQua.setText("Đang phân tích tâm trạng...");
-            txtKetQua.setTextColor(Color.BLACK);
 
+            Bitmap input = getLowResGrayscaleBitmap(bitmap, 48, 48);
+            ByteBuffer buffer = convertBitmapToGrayByteBuffer(input);
 
-            Bitmap lowResGrayFace = getLowResGrayscaleBitmap(bitmap, 48, 48);
+            float[][] output = new float[1][2];
+            tflite.run(buffer, output);
 
+            boolean isDepressed = output[0][1] > output[0][0];
 
-            ByteBuffer inputBuffer = convertBitmapToGrayByteBuffer(lowResGrayFace);
-            float[][] outputBuffer = new float[1][2];
-
-            tflite.run(inputBuffer, outputBuffer);
-
-            float probNormal = outputBuffer[0][0];
-            float probDepression = outputBuffer[0][1];
-
-            boolean isDepressed = probDepression > probNormal;
             com.example.final_project.util.DataManager.saveFaceResult(this, isDepressed);
 
+            Intent intent = new Intent(this, KetQuaHinhAnhActivity.class);
+            intent.putExtra("isDepressed", isDepressed);
 
-            Intent intent = new Intent(ChonHinhHinhAnhActivity.this, KetQuaHinhAnhActivity.class);
-            intent.putExtra("isDepressed", isDepressed); // Gửi kết quả (True/False) sang trang kia
+            // ⭐ THÊM DÒNG NÀY
+            intent.putExtra("username", username);
+
             startActivity(intent);
-
             finish();
 
         } catch (Exception e) {
-            e.printStackTrace();
-            txtKetQua.setText("Lỗi AI: " + e.getMessage());
-            txtKetQua.setTextColor(Color.RED);
+            txtKetQua.setText("Lỗi AI");
         }
     }
 
-
     private ByteBuffer convertBitmapToGrayByteBuffer(Bitmap bitmap) {
-        ByteBuffer byteBuffer = ByteBuffer.allocateDirect(4 * 48 * 48 * 1);
+        ByteBuffer byteBuffer = ByteBuffer.allocateDirect(4 * 48 * 48);
         byteBuffer.order(ByteOrder.nativeOrder());
-        int[] intValues = new int[48 * 48];
 
-        bitmap.getPixels(intValues, 0, bitmap.getWidth(), 0, 0, bitmap.getWidth(), bitmap.getHeight());
+        int[] pixels = new int[48 * 48];
+        bitmap.getPixels(pixels, 0, 48, 0, 0, 48, 48);
 
-        for (int pixelValue : intValues) {
-            int r = (pixelValue >> 16) & 0xFF;
-
-            // THỬ NGHIỆM TRƯỜNG HỢP 1: Dải [-1, 1]
-            float normalizedPixel = (r - 127.5f) / 127.5f;
-
-            byteBuffer.putFloat(normalizedPixel);
+        for (int p : pixels) {
+            float v = ((p >> 16) & 0xFF) / 255.0f;
+            byteBuffer.putFloat(v);
         }
+
         return byteBuffer;
     }
 
     private File getFileFromAssets(Context context, String fileName) throws IOException {
         File file = new File(context.getCacheDir(), fileName);
-        if (!file.exists() || file.length() == 0) {
-            try (InputStream is = context.getAssets().open(fileName);
-                 FileOutputStream fos = new FileOutputStream(file)) {
-                byte[] buffer = new byte[1024];
-                int read;
-                while ((read = is.read(buffer)) != -1) {
-                    fos.write(buffer, 0, read);
-                }
-                fos.flush();
+        if (!file.exists()) {
+            InputStream is = context.getAssets().open(fileName);
+            FileOutputStream fos = new FileOutputStream(file);
+
+            byte[] buffer = new byte[1024];
+            int read;
+            while ((read = is.read(buffer)) != -1) {
+                fos.write(buffer, 0, read);
             }
         }
         return file;

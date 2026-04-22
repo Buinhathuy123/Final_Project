@@ -23,7 +23,7 @@
                 android:layout_marginBottom="20dp">
                 <ImageView android:layout_width="42dp" android:layout_height="42dp" android:src="@drawable/avatar"/>
                 <View android:layout_width="0dp" android:layout_height="0dp" android:layout_weight="1"/>
-                <ImageView android:layout_width="42dp" android:layout_height="42dp" android:src="@drawable/chuong"/>
+
             </LinearLayout>
 
             <LinearLayout
@@ -32,7 +32,7 @@
                 android:orientation="horizontal"
                 android:layout_marginBottom="20dp">
                 <View android:layout_width="0dp" android:layout_height="0dp" android:layout_weight="1"/>
-                <ImageView android:layout_width="50dp" android:layout_height="50dp" android:src="@drawable/menu"/>
+
             </LinearLayout>
 
             <TextView

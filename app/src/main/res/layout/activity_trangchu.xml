@@ -14,7 +14,6 @@
         android:layout_marginBottom="20dp">
         <ImageView android:layout_width="48dp" android:layout_height="48dp" android:src="@drawable/avatar"/>
         <View android:layout_width="0dp" android:layout_weight="1" android:layout_height="1dp"/>
-        <ImageView android:layout_width="32dp" android:layout_height="32dp" android:src="@drawable/chuong"/>
     </LinearLayout>
 
     <TextView
