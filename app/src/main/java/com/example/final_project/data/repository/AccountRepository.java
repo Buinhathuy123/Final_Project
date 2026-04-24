@@ -30,4 +30,7 @@ public class AccountRepository {
     public Call<ApiResponse> updateResult(Map<String, Object> body) {
         return apiService.updateResult(body);
     }
+    public Call<Account> getUser(String username) {
+        return apiService.getUser(username);
+    }
 }

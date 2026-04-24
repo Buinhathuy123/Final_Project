@@ -8,6 +8,7 @@ import retrofit2.Call;
 import retrofit2.http.Body;
 import retrofit2.http.GET;
 import retrofit2.http.POST;
+import retrofit2.http.Path;
 import retrofit2.http.Query;
 
 public interface ApiService {
@@ -26,4 +27,6 @@ public interface ApiService {
     Call<ApiResponse> changePassword(@Body Map<String, String> body);
     @POST("/update-result")
     Call<ApiResponse> updateResult(@Body Map<String, Object> body);
+    @GET("/user/{username}")
+    Call<Account> getUser(@Path("username") String username);
 }

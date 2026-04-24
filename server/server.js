@@ -201,6 +201,30 @@ app.post("/update-result", async (req, res) => {
         })
     }
 })
+// ================= GET USER RESULT =================
+app.get("/user/:username", async (req, res) => {
+    try {
+        const user = await Account.findOne({ username: req.params.username })
+
+        if (!user) {
+            return res.json({
+                ok: false,
+                message: "Không tìm thấy user"
+            })
+        }
+
+        res.json({
+            ok: true,
+            data: user
+        })
+
+    } catch (err) {
+        res.json({
+            ok: false,
+            message: err.message
+        })
+    }
+})
 // ================= TEST API =================
 app.get("/", (req, res) => {
     res.send("API is running 🚀")
