@@ -27,7 +27,7 @@ public class BatDauGhiAmActivity extends AppCompatActivity {
         btnBatDau.setOnClickListener(v -> {
             Intent intent = new Intent(
                     BatDauGhiAmActivity.this,
-                    TrangTiepTheoGhiAmActivity.class
+                    TrangGhiAmActivity.class
             );
             startActivity(intent);
         });
