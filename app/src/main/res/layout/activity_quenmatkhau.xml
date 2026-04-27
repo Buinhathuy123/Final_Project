@@ -73,28 +73,116 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:text="Mật khẩu hiện tại"
+                android:textSize="13sp"
+                android:textColor="#4A4A4A"
+                android:layout_marginTop="25dp"
+                android:layout_marginBottom="10dp"/>
+
+            <RelativeLayout
+                android:layout_width="match_parent"
+                android:layout_height="50dp">
+
+                <EditText
+                    android:id="@+id/user_password"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:background="#FFFFFF"
+                    android:padding="15dp"
+                    android:paddingEnd="45dp"
+                    android:hint="Nhập mật khẩu hiện tại"
+                    android:inputType="textPassword"
+                    android:textSize="15sp"/>
+
+                <ImageView
+                    android:id="@+id/toggle_user_password"
+                    android:layout_width="22dp"
+                    android:layout_height="22dp"
+                    android:layout_alignParentEnd="true"
+                    android:layout_centerVertical="true"
+                    android:layout_marginEnd="12dp"
+                    android:src="@drawable/hidepass"/>
+            </RelativeLayout>
+
+            <!-- NEW PASSWORD -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
                 android:text="Mật khẩu mới"
                 android:textSize="13sp"
                 android:textColor="#4A4A4A"
                 android:layout_marginTop="25dp"
                 android:layout_marginBottom="10dp"/>
 
-            <LinearLayout
+            <RelativeLayout
                 android:layout_width="match_parent"
-                android:layout_height="50dp"
-                android:background="#FFFFFF"
-                android:padding="15dp"
-                android:gravity="center_vertical">
+                android:layout_height="50dp">
 
                 <EditText
                     android:id="@+id/user_new_password"
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
+                    android:layout_height="match_parent"
+                    android:background="#FFFFFF"
+                    android:padding="15dp"
+                    android:paddingEnd="45dp"
                     android:hint="Nhập mật khẩu mới"
                     android:inputType="textPassword"
-                    android:background="@null"
                     android:textSize="15sp"/>
-            </LinearLayout>
+
+                <ImageView
+                    android:id="@+id/toggle_new_password"
+                    android:layout_width="22dp"
+                    android:layout_height="22dp"
+                    android:layout_alignParentEnd="true"
+                    android:layout_centerVertical="true"
+                    android:layout_marginEnd="12dp"
+                    android:src="@drawable/hidepass"/>
+            </RelativeLayout>
+
+            <!-- CONFIRM PASSWORD -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Xác nhận mật khẩu mới"
+                android:textSize="13sp"
+                android:textColor="#4A4A4A"
+                android:layout_marginTop="25dp"
+                android:layout_marginBottom="10dp"/>
+
+            <RelativeLayout
+                android:layout_width="match_parent"
+                android:layout_height="50dp">
+
+                <EditText
+                    android:id="@+id/confirm_user_new_password"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:background="#FFFFFF"
+                    android:padding="15dp"
+                    android:paddingEnd="45dp"
+                    android:hint="Xác nhận lại mật khẩu"
+                    android:inputType="textPassword"
+                    android:textSize="15sp"/>
+
+                <ImageView
+                    android:id="@+id/toggle_confirm_password"
+                    android:layout_width="22dp"
+                    android:layout_height="22dp"
+                    android:layout_alignParentEnd="true"
+                    android:layout_centerVertical="true"
+                    android:layout_marginEnd="12dp"
+                    android:src="@drawable/hidepass"/>
+
+            </RelativeLayout>
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="• Username phải có chữ\n• Password ≥ 8 ký tự, có chữ in hoa và ký tự đặc biệt\n• Email phải là @gmail.com\n• Xác nhận mật khẩu phải trùng"
+                android:textColor="#6C7A92"
+                android:textSize="12sp"
+                android:layout_marginTop="12dp"
+                android:lineSpacingExtra="2dp"/>
+
             <!-- BUTTON -->
             <LinearLayout
                 android:id="@+id/btn_send"

@@ -28,7 +28,6 @@ const AccountSchema = new mongoose.Schema({
 
 const Account = mongoose.model("accounts", AccountSchema)
 
-
 // ================= REGISTER =================
 app.post("/register", async (req, res) => {
     try {
@@ -118,9 +117,9 @@ app.post("/login", async (req, res) => {
 // ================= CHANGE PASSWORD =================
 app.post("/change-password", async (req, res) => {
     try {
-        const { username, newPassword } = req.body
+        const { username, currentPassword, newPassword } = req.body
 
-        if (!username || !newPassword) {
+        if (!username || !currentPassword || !newPassword) {
             return res.json({
                 ok: false,
                 message: "Thiếu dữ liệu"
@@ -136,7 +135,27 @@ app.post("/change-password", async (req, res) => {
             })
         }
 
-        // 🔐 hash password mới
+        // 🔥 CHECK PASSWORD HIỆN TẠI
+        const isMatch = await bcrypt.compare(currentPassword, user.password)
+
+        if (!isMatch) {
+            return res.json({
+                ok: false,
+                message: "Sai mật khẩu hiện tại"
+            })
+        }
+
+        // 🔥 CHECK TRÙNG PASSWORD
+        const isSame = await bcrypt.compare(newPassword, user.password)
+
+        if (isSame) {
+            return res.json({
+                ok: false,
+                message: "Mật khẩu mới không được trùng mật khẩu cũ"
+            })
+        }
+
+        // 🔐 HASH PASSWORD MỚI
         const hashedPassword = await bcrypt.hash(newPassword, 10)
 
         user.password = hashedPassword

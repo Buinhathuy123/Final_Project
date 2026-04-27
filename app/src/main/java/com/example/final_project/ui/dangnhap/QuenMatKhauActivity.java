@@ -1,7 +1,9 @@
 package com.example.final_project.ui.dangnhap;
 
 import android.os.Bundle;
+import android.text.InputType;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.Toast;
 
@@ -21,10 +23,17 @@ import retrofit2.Response;
 
 public class QuenMatKhauActivity extends AppCompatActivity {
 
-    private EditText edtUsername, edtNewPassword;
+    private EditText edtUsername, edtCurrentPassword, edtNewPassword, edtConfirmPassword;
     private LinearLayout btnSend;
+    private ImageView btnBack;
+
+    private ImageView toggleCurrentPassword, toggleNewPassword, toggleConfirmPassword;
 
     private ApiService apiService;
+
+    private boolean isCurrentVisible = false;
+    private boolean isNewVisible = false;
+    private boolean isConfirmVisible = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -32,31 +41,132 @@ public class QuenMatKhauActivity extends AppCompatActivity {
         setContentView(R.layout.activity_quenmatkhau);
 
         edtUsername = findViewById(R.id.user_name);
+        edtCurrentPassword = findViewById(R.id.user_password); // 🔥 thêm
         edtNewPassword = findViewById(R.id.user_new_password);
+        edtConfirmPassword = findViewById(R.id.confirm_user_new_password);
+
         btnSend = findViewById(R.id.btn_send);
+        btnBack = findViewById(R.id.r36h1tttdukv);
+
+        toggleCurrentPassword = findViewById(R.id.toggle_user_password); // 🔥 thêm
+        toggleNewPassword = findViewById(R.id.toggle_new_password);
+        toggleConfirmPassword = findViewById(R.id.toggle_confirm_password);
 
         apiService = RetrofitClient
                 .getInstance()
                 .create(ApiService.class);
 
         btnSend.setOnClickListener(v -> changePassword());
+        btnBack.setOnClickListener(v -> finish());
+
+        setupToggle();
     }
 
+    // =========================
+    // TOGGLE PASSWORD
+    // =========================
+    private void setupToggle() {
+
+        toggleCurrentPassword.setOnClickListener(v -> {
+            if (isCurrentVisible) {
+                edtCurrentPassword.setInputType(
+                        InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD);
+            } else {
+                edtCurrentPassword.setInputType(
+                        InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD);
+            }
+            edtCurrentPassword.setSelection(edtCurrentPassword.getText().length());
+            isCurrentVisible = !isCurrentVisible;
+        });
+
+        toggleNewPassword.setOnClickListener(v -> {
+            if (isNewVisible) {
+                edtNewPassword.setInputType(
+                        InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD);
+            } else {
+                edtNewPassword.setInputType(
+                        InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD);
+            }
+            edtNewPassword.setSelection(edtNewPassword.getText().length());
+            isNewVisible = !isNewVisible;
+        });
+
+        toggleConfirmPassword.setOnClickListener(v -> {
+            if (isConfirmVisible) {
+                edtConfirmPassword.setInputType(
+                        InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD);
+            } else {
+                edtConfirmPassword.setInputType(
+                        InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD);
+            }
+            edtConfirmPassword.setSelection(edtConfirmPassword.getText().length());
+            isConfirmVisible = !isConfirmVisible;
+        });
+    }
+
+    // =========================
+    // CHANGE PASSWORD
+    // =========================
     private void changePassword() {
 
         String username = edtUsername.getText().toString().trim();
+        String currentPassword = edtCurrentPassword.getText().toString().trim();
         String newPassword = edtNewPassword.getText().toString().trim();
+        String confirmPassword = edtConfirmPassword.getText().toString().trim();
 
-        if (username.isEmpty() || newPassword.isEmpty()) {
-            Toast.makeText(this,
-                    "Vui lòng nhập đầy đủ thông tin",
-                    Toast.LENGTH_SHORT).show();
+        // ===== CHECK RỖNG =====
+        if (username.isEmpty()) {
+            edtUsername.setError("Không được để trống username");
             return;
         }
 
-        // 🔥 ĐÚNG KEY THEO BACKEND
+        if (currentPassword.isEmpty()) {
+            edtCurrentPassword.setError("Không được để trống mật khẩu hiện tại");
+            return;
+        }
+
+        if (newPassword.isEmpty()) {
+            edtNewPassword.setError("Không được để trống mật khẩu mới");
+            return;
+        }
+
+        if (confirmPassword.isEmpty()) {
+            edtConfirmPassword.setError("Không được để trống xác nhận mật khẩu");
+            return;
+        }
+
+        // ===== CHECK MATCH =====
+        if (!newPassword.equals(confirmPassword)) {
+            edtConfirmPassword.setError("Vui lòng kiểm tra lại xác nhận mật khẩu");
+            return;
+        }
+
+        // ===== CHECK TRÙNG PASSWORD =====
+        if (newPassword.equals(currentPassword)) {
+            edtNewPassword.setError("Vui lòng chọn mật khẩu khác hiện tại");
+            return;
+        }
+
+        // ===== PASSWORD RULE =====
+        if (newPassword.length() < 8) {
+            edtNewPassword.setError("Password phải ít nhất 8 ký tự");
+            return;
+        }
+
+        if (!newPassword.matches(".*[A-Z].*")) {
+            edtNewPassword.setError("Phải có chữ in hoa");
+            return;
+        }
+
+        if (!newPassword.matches(".*[!@#$%^&*()_+=|<>?{}\\[\\]~-].*")) {
+            edtNewPassword.setError("Phải có ký tự đặc biệt");
+            return;
+        }
+
+        // ===== CALL API (GỬI CẢ CURRENT PASSWORD) =====
         Map<String, String> body = new HashMap<>();
         body.put("username", username);
+        body.put("currentPassword", currentPassword); // 🔥 thêm quan trọng
         body.put("newPassword", newPassword);
 
         apiService.changePassword(body).enqueue(new Callback<ApiResponse>() {
@@ -83,8 +193,9 @@ public class QuenMatKhauActivity extends AppCompatActivity {
 
                 } else {
 
+                    // 🔥 sai mật khẩu hiện tại hoặc user
                     Toast.makeText(QuenMatKhauActivity.this,
-                            res.getMessage(),
+                            "Vui lòng kiểm tra lại mật khẩu và tài khoản",
                             Toast.LENGTH_SHORT).show();
                 }
             }
@@ -92,7 +203,7 @@ public class QuenMatKhauActivity extends AppCompatActivity {
             @Override
             public void onFailure(Call<ApiResponse> call, Throwable t) {
                 Toast.makeText(QuenMatKhauActivity.this,
-                        "Không kết nối được server: " + t.getMessage(),
+                        "Không kết nối được server",
                         Toast.LENGTH_SHORT).show();
             }
         });

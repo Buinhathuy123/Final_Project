@@ -42,7 +42,7 @@ public class TrangChuActivity extends AppCompatActivity {
 
     private Integer serverScore = null;
     private String serverLevel = null;
-    private String lastTestTime = null; // ✅ FIX STRING
+    private String lastTestTime = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -99,10 +99,23 @@ public class TrangChuActivity extends AppCompatActivity {
 
                         serverScore = user.getFinalScore();
                         serverLevel = user.getLevel();
-                        lastTestTime = user.getLastTestTime(); // ✅ STRING
+                        lastTestTime = user.getLastTestTime();
 
-                        if (serverScore != null && serverLevel != null) {
-                            showServerResult();
+                        if (serverScore != null && serverLevel != null && lastTestTime != null) {
+
+                            String today = new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
+                                    .format(new Date());
+
+                            String serverDate = formatDate(lastTestTime);
+
+                            // ✅ Nếu cùng ngày → dùng server
+                            if (today.equals(serverDate)) {
+                                showServerResult();
+                            } else {
+                                // 🔥 khác ngày → tính lại
+                                calculateAndSaveLocalResult();
+                            }
+
                         } else {
                             calculateAndSaveLocalResult();
                         }
@@ -124,18 +137,29 @@ public class TrangChuActivity extends AppCompatActivity {
     }
 
     // =========================
-    // FORMAT STRING DATE
+    // FORMAT DATE (FIX MẠNH HƠN)
     // =========================
     private String formatDate(String raw) {
+
         if (raw == null) return "";
 
         try {
+            // case backend kiểu: 2026-04-27T10:20:30
+            if (raw.contains("T")) {
+                String datePart = raw.split("T")[0]; // 2026-04-27
+                String[] parts = datePart.split("-");
+                return parts[2] + "/" + parts[1] + "/" + parts[0];
+            }
+
+            // fallback (kiểu cũ)
             String[] parts = raw.split(" ");
-            return parts[parts.length - 1]; // ✅ lấy phần cuối (ngày)
+            return parts[parts.length - 1];
+
         } catch (Exception e) {
             return raw;
         }
     }
+
     // =========================
     // HIỂN THỊ SERVER
     // =========================
@@ -152,7 +176,6 @@ public class TrangChuActivity extends AppCompatActivity {
 
         SpannableString spannable = new SpannableString(fullText);
 
-        // dòng 1: to
         spannable.setSpan(
                 new AbsoluteSizeSpan(22, true),
                 0,
@@ -160,7 +183,6 @@ public class TrangChuActivity extends AppCompatActivity {
                 Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
         );
 
-        // dòng 2: nhỏ hơn
         spannable.setSpan(
                 new AbsoluteSizeSpan(14, true),
                 line1.length(),
@@ -203,14 +225,15 @@ public class TrangChuActivity extends AppCompatActivity {
 
         String line1 = finalScore + " điểm - " + level;
 
-        String line2 = "Ngày test: " +
-                new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(new Date());
+        String today = new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
+                .format(new Date());
+
+        String line2 = "Ngày test: " + today;
 
         String fullText = line1 + "\n" + line2;
 
         SpannableString spannable = new SpannableString(fullText);
 
-// dòng 1 (to)
         spannable.setSpan(
                 new AbsoluteSizeSpan(22, true),
                 0,
@@ -218,7 +241,6 @@ public class TrangChuActivity extends AppCompatActivity {
                 Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
         );
 
-// dòng 2 (nhỏ)
         spannable.setSpan(
                 new AbsoluteSizeSpan(14, true),
                 line1.length(),
@@ -227,8 +249,6 @@ public class TrangChuActivity extends AppCompatActivity {
         );
 
         txtFinalResult.setText(spannable);
-        txtFinalResult.setTextColor(Color.WHITE);
-        txtFinalResult.setTypeface(null, Typeface.BOLD);
         txtFinalResult.setTextColor(Color.WHITE);
         txtFinalResult.setTypeface(null, Typeface.BOLD);
 

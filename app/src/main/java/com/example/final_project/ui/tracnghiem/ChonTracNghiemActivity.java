@@ -6,6 +6,7 @@ import android.view.View;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.widget.Toast; // 👈 thêm
 
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -13,6 +14,7 @@ import com.example.final_project.R;
 import com.example.final_project.ui.ketqua.KetQuaTracNghiemActivity;
 import com.example.final_project.data.model.Question;
 import com.example.final_project.data.model.Answer;
+
 import java.util.Arrays;
 import java.util.List;
 
@@ -35,7 +37,6 @@ public class ChonTracNghiemActivity extends AppCompatActivity {
 
     private int fullWidth = 0;
 
-    // ================= LIFECYCLE =================
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -47,7 +48,6 @@ public class ChonTracNghiemActivity extends AppCompatActivity {
         fullTiendO.post(() -> fullWidth = fullTiendO.getWidth());
     }
 
-    // ================= INIT UI =================
     private void initViews() {
 
         textCauHoi = findViewById(R.id.textCauHoi);
@@ -69,7 +69,6 @@ public class ChonTracNghiemActivity extends AppCompatActivity {
         cb4 = findViewById(R.id.r1y9q5zgzvp4);
     }
 
-    // ================= LOCAL QUESTIONS =================
     private void loadLocalQuestions() {
 
         questions = Arrays.asList(
@@ -161,7 +160,6 @@ public class ChonTracNghiemActivity extends AppCompatActivity {
         showQuestion();
     }
 
-    // ================= SHOW QUESTION =================
     private void showQuestion() {
 
         if (currentIndex >= questions.size()) {
@@ -205,7 +203,13 @@ public class ChonTracNghiemActivity extends AppCompatActivity {
 
         btnNext.setOnClickListener(v -> {
 
-            if (selectedScore == -1) return;
+            // 🔥 CHECK CHƯA CHỌN
+            if (selectedScore == -1) {
+                Toast.makeText(this,
+                        "Vui lòng chọn đáp án",
+                        Toast.LENGTH_SHORT).show();
+                return;
+            }
 
             totalScore += selectedScore;
             currentIndex++;
@@ -214,7 +218,6 @@ public class ChonTracNghiemActivity extends AppCompatActivity {
         });
     }
 
-    // ================= ANSWER =================
     private void selectAnswer(int index, Question q) {
 
         resetSelection();
@@ -222,33 +225,20 @@ public class ChonTracNghiemActivity extends AppCompatActivity {
         selectedScore = q.getAnswers().get(index).getScore();
 
         switch(index){
-
-            case 0:
-                cb1.setSelected(true);
-                break;
-
-            case 1:
-                cb2.setSelected(true);
-                break;
-
-            case 2:
-                cb3.setSelected(true);
-                break;
-
-            case 3:
-                cb4.setSelected(true);
-                break;
+            case 0: cb1.setSelected(true); break;
+            case 1: cb2.setSelected(true); break;
+            case 2: cb3.setSelected(true); break;
+            case 3: cb4.setSelected(true); break;
         }
     }
-    private void resetSelection(){
 
+    private void resetSelection(){
         cb1.setSelected(false);
         cb2.setSelected(false);
         cb3.setSelected(false);
         cb4.setSelected(false);
     }
 
-    // ================= RESULT =================
     private void goToResult(){
 
         Intent intent =

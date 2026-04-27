@@ -21,14 +21,15 @@ import retrofit2.Response;
 
 public class DangKyActivity extends AppCompatActivity {
 
-    private EditText username, password, email;
+    private EditText username, password, confirmPassword, email;
     private LinearLayout btnRegister;
-    private ImageView togglePassword;
+    private ImageView togglePassword, toggleConfirmPassword;
     private ImageView btnBack;
 
     private AccountRepository repository;
 
     private boolean isPasswordVisible = false;
+    private boolean isConfirmPasswordVisible = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -37,22 +38,23 @@ public class DangKyActivity extends AppCompatActivity {
 
         username = findViewById(R.id.user_name);
         password = findViewById(R.id.user_password);
+        confirmPassword = findViewById(R.id.user_confirm_password); // ✅ thêm
         email = findViewById(R.id.user_email);
         btnRegister = findViewById(R.id.btn_register);
 
-        // 👉 icon mắt (bạn thêm vào XML với id này)
         togglePassword = findViewById(R.id.toggle_password);
+        toggleConfirmPassword = findViewById(R.id.toggle_confirm_password); // ✅ thêm
+
+        btnBack = findViewById(R.id.btn_back);
 
         repository = new AccountRepository();
 
         btnRegister.setOnClickListener(v -> register());
 
         setupTogglePassword();
-        btnBack = findViewById(R.id.btn_back);
+        setupToggleConfirmPassword();
 
-        btnBack.setOnClickListener(v -> {
-            finish(); // quay lại màn trước (ChonDangNhapActivity)
-        });
+        btnBack.setOnClickListener(v -> finish());
     }
 
     // =========================
@@ -62,17 +64,30 @@ public class DangKyActivity extends AppCompatActivity {
         togglePassword.setOnClickListener(v -> {
 
             if (isPasswordVisible) {
-                // 👉 Ẩn password
                 password.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD);
             } else {
-                // 👉 Hiện password
                 password.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD);
             }
 
-            // giữ con trỏ ở cuối
             password.setSelection(password.getText().length());
-
             isPasswordVisible = !isPasswordVisible;
+        });
+    }
+
+    // =========================
+    // TOGGLE CONFIRM PASSWORD
+    // =========================
+    private void setupToggleConfirmPassword() {
+        toggleConfirmPassword.setOnClickListener(v -> {
+
+            if (isConfirmPasswordVisible) {
+                confirmPassword.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD);
+            } else {
+                confirmPassword.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD);
+            }
+
+            confirmPassword.setSelection(confirmPassword.getText().length());
+            isConfirmPasswordVisible = !isConfirmPasswordVisible;
         });
     }
 
@@ -83,6 +98,7 @@ public class DangKyActivity extends AppCompatActivity {
 
         String user = username.getText().toString().trim();
         String pass = password.getText().toString().trim();
+        String confirmPass = confirmPassword.getText().toString().trim(); // ✅ lấy confirm
         String mail = email.getText().toString().trim();
 
         // ===== 1. CHECK RỖNG =====
@@ -96,18 +112,29 @@ public class DangKyActivity extends AppCompatActivity {
             return;
         }
 
+        if (confirmPass.isEmpty()) {
+            confirmPassword.setError("Không được để trống xác nhận mật khẩu");
+            return;
+        }
+
         if (mail.isEmpty()) {
             email.setError("Không được để trống email");
             return;
         }
 
-        // ===== 2. USERNAME PHẢI CÓ CHỮ =====
+        // ===== 2. CHECK MATCH PASSWORD =====
+        if (!pass.equals(confirmPass)) {
+            confirmPassword.setError("Vui lòng kiểm tra lại xác nhận mật khẩu");
+            return;
+        }
+
+        // ===== 3. USERNAME =====
         if (!user.matches(".*[a-zA-Z].*")) {
             username.setError("Username phải có chữ");
             return;
         }
 
-        // ===== 3. PASSWORD =====
+        // ===== 4. PASSWORD RULE =====
         if (pass.length() < 8) {
             password.setError("Password phải ít nhất 8 ký tự");
             return;
@@ -123,7 +150,7 @@ public class DangKyActivity extends AppCompatActivity {
             return;
         }
 
-        // ===== 4. EMAIL =====
+        // ===== 5. EMAIL =====
         if (!mail.endsWith("@gmail.com")) {
             email.setError("Email phải là @gmail.com");
             return;
@@ -154,7 +181,6 @@ public class DangKyActivity extends AppCompatActivity {
                         finish();
 
                     } else {
-                        // 🔥 username đã tồn tại từ MongoDB
                         Toast.makeText(DangKyActivity.this,
                                 "Vui lòng chọn tên tài khoản khác",
                                 Toast.LENGTH_SHORT).show();
@@ -185,6 +211,7 @@ public class DangKyActivity extends AppCompatActivity {
     private void clearAllFields() {
         username.setText("");
         password.setText("");
+        confirmPassword.setText("");
         email.setText("");
     }
 }
