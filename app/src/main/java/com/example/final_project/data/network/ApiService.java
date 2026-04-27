@@ -13,25 +13,50 @@ import retrofit2.http.Query;
 
 public interface ApiService {
 
-    // API Register
+    // ================= REGISTER =================
     @POST("/register")
     Call<ApiResponse> register(@Body Account account);
 
-    // API Get Questions
+    // ================= QUESTIONS =================
     @GET("questions")
     Call<ApiResponse> getQuestions(@Query("size") int size);
-    // API Login
+
+    // ================= LOGIN =================
     @POST("/login")
     Call<ApiResponse> login(@Body Account account);
+
+    // ================= CHANGE PASSWORD (OLD - cần password hiện tại) =================
     @POST("/change-password")
     Call<ApiResponse> changePassword(@Body Map<String, String> body);
+
+    // ================= UPDATE RESULT =================
     @POST("/update-result")
     Call<ApiResponse> updateResult(@Body Map<String, Object> body);
+
+    // ================= GET USER =================
     @GET("/user/{username}")
     Call<ApiResponse> getUser(@Path("username") String username);
-    @POST("send-otp")
+
+    // ================= OTP REGISTER (GIỮ NGUYÊN) =================
+    @POST("/send-otp")
     Call<ApiResponse> sendOtp(@Body Map<String, String> body);
 
-    @POST("verify-otp")
+    @POST("/verify-otp")
     Call<ApiResponse> verifyOtp(@Body Map<String, String> body);
+
+    // =========================================================
+    // 🔥 OTP QUÊN MẬT KHẨU (MỚI - KHÔNG ẢNH HƯỞNG REGISTER)
+    // =========================================================
+
+    // 1. Gửi OTP (check username + email)
+    @POST("/forgot-password/send-otp")
+    Call<ApiResponse> sendOtpForgot(@Body Map<String, String> body);
+
+    // 2. Verify OTP
+    @POST("/forgot-password/verify-otp")
+    Call<ApiResponse> verifyOtpForgot(@Body Map<String, String> body);
+
+    // 3. Đổi mật khẩu KHÔNG cần password cũ
+    @POST("/forgot-password/change-password")
+    Call<ApiResponse> changePasswordForgot(@Body Map<String, String> body);
 }

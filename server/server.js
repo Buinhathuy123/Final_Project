@@ -7,7 +7,6 @@ const cors = require("cors")
 const bcrypt = require("bcrypt")
 const nodemailer = require("nodemailer")
 
-
 const app = express()
 const otpStore = {}
 
@@ -29,6 +28,8 @@ const AccountSchema = new mongoose.Schema({
     lastTestTime: { type: String, default: null }
 })
 
+const Account = mongoose.model("accounts", AccountSchema)
+
 const transporter = nodemailer.createTransport({
     service: "gmail",
     auth: {
@@ -36,8 +37,6 @@ const transporter = nodemailer.createTransport({
         pass: process.env.EMAIL_PASS
     }
 })
-
-const Account = mongoose.model("accounts", AccountSchema)
 
 // ================= REGISTER =================
 app.post("/register", async (req, res) => {
@@ -60,7 +59,6 @@ app.post("/register", async (req, res) => {
             })
         }
 
-        // 🔐 hash password
         const hashedPassword = await bcrypt.hash(password, 10)
 
         const account = new Account({
@@ -85,6 +83,7 @@ app.post("/register", async (req, res) => {
     }
 })
 
+// ================= SEND OTP (REGISTER - GIỮ NGUYÊN) =================
 app.post("/send-otp", async (req, res) => {
     try {
         const { email } = req.body
@@ -95,7 +94,10 @@ app.post("/send-otp", async (req, res) => {
 
         const otp = Math.floor(100000 + Math.random() * 900000).toString()
 
-        otpStore[email] = otp
+        otpStore[email] = {
+            otp,
+            expire: Date.now() + 5 * 60 * 1000
+        }
 
         await transporter.sendMail({
             from: process.env.EMAIL_USER,
@@ -110,16 +112,71 @@ app.post("/send-otp", async (req, res) => {
         res.json({ ok: false, message: err.message })
     }
 })
+
+// ================= SEND OTP (QUÊN MẬT KHẨU - MỚI) =================
+app.post("/send-otp-forgot", async (req, res) => {
+    try {
+        const { username, email } = req.body
+
+        if (!username || !email) {
+            return res.json({ ok: false, message: "Thiếu dữ liệu" })
+        }
+
+        const user = await Account.findOne({ username })
+
+        if (!user) {
+            return res.json({ ok: false, message: "User không tồn tại" })
+        }
+
+        // 🔥 CHECK EMAIL ĐÚNG USER
+        if (user.email !== email) {
+            return res.json({ ok: false, message: "Email không đúng" })
+        }
+
+        const otp = Math.floor(100000 + Math.random() * 900000).toString()
+
+        otpStore[email] = {
+            otp,
+            expire: Date.now() + 5 * 60 * 1000
+        }
+
+        await transporter.sendMail({
+            from: process.env.EMAIL_USER,
+            to: email,
+            subject: "OTP khôi phục mật khẩu",
+            text: `Mã OTP của bạn là: ${otp}`
+        })
+
+        res.json({ ok: true, message: "OTP đã gửi (forgot)" })
+
+    } catch (err) {
+        res.json({ ok: false, message: err.message })
+    }
+})
+
+// ================= VERIFY OTP (DÙNG CHUNG) =================
 app.post("/verify-otp", (req, res) => {
     const { email, otp } = req.body
 
-    if (otpStore[email] === otp) {
-        delete otpStore[email]
-        return res.json({ ok: true })
+    const data = otpStore[email]
+
+    if (!data) {
+        return res.json({ ok: false, message: "OTP không tồn tại" })
     }
 
-    res.json({ ok: false, message: "OTP sai" })
+    if (Date.now() > data.expire) {
+        delete otpStore[email]
+        return res.json({ ok: false, message: "OTP hết hạn" })
+    }
+
+    if (data.otp !== otp) {
+        return res.json({ ok: false, message: "OTP sai" })
+    }
+
+    delete otpStore[email]
+    return res.json({ ok: true })
 })
+
 // ================= LOGIN =================
 app.post("/login", async (req, res) => {
     try {
@@ -134,7 +191,6 @@ app.post("/login", async (req, res) => {
             })
         }
 
-        // 🔐 so sánh password
         const isMatch = await bcrypt.compare(password, user.password)
 
         if (!isMatch) {
@@ -158,13 +214,12 @@ app.post("/login", async (req, res) => {
     }
 })
 
-
-// ================= CHANGE PASSWORD =================
+// ================= CHANGE PASSWORD (CHO QUÊN PASS - KHÔNG CẦN currentPassword) =================
 app.post("/change-password", async (req, res) => {
     try {
-        const { username, currentPassword, newPassword } = req.body
+        const { username, newPassword } = req.body
 
-        if (!username || !currentPassword || !newPassword) {
+        if (!username || !newPassword) {
             return res.json({
                 ok: false,
                 message: "Thiếu dữ liệu"
@@ -180,17 +235,7 @@ app.post("/change-password", async (req, res) => {
             })
         }
 
-        // 🔥 CHECK PASSWORD HIỆN TẠI
-        const isMatch = await bcrypt.compare(currentPassword, user.password)
-
-        if (!isMatch) {
-            return res.json({
-                ok: false,
-                message: "Sai mật khẩu hiện tại"
-            })
-        }
-
-        // 🔥 CHECK TRÙNG PASSWORD
+        // 🔥 KHÔNG CHO TRÙNG PASSWORD CŨ
         const isSame = await bcrypt.compare(newPassword, user.password)
 
         if (isSame) {
@@ -200,7 +245,6 @@ app.post("/change-password", async (req, res) => {
             })
         }
 
-        // 🔐 HASH PASSWORD MỚI
         const hashedPassword = await bcrypt.hash(newPassword, 10)
 
         user.password = hashedPassword
@@ -218,6 +262,7 @@ app.post("/change-password", async (req, res) => {
         })
     }
 })
+
 // ================= UPDATE RESULT =================
 app.post("/update-result", async (req, res) => {
     try {
@@ -230,7 +275,6 @@ app.post("/update-result", async (req, res) => {
             })
         }
 
-        // ⭐ LẤY THỜI GIAN HIỆN TẠI
         const now = new Date().toLocaleString("vi-VN")
 
         const user = await Account.findOneAndUpdate(
@@ -238,8 +282,6 @@ app.post("/update-result", async (req, res) => {
             {
                 finalScore: finalScore,
                 level: level,
-
-                // ⭐ THÊM DÒNG NÀY
                 lastTestTime: now
             },
             { new: true }
@@ -265,7 +307,8 @@ app.post("/update-result", async (req, res) => {
         })
     }
 })
-// ================= GET USER RESULT =================
+
+// ================= GET USER =================
 app.get("/user/:username", async (req, res) => {
     try {
         const user = await Account.findOne({ username: req.params.username })
@@ -289,13 +332,13 @@ app.get("/user/:username", async (req, res) => {
         })
     }
 })
-// ================= TEST API =================
+
+// ================= TEST =================
 app.get("/", (req, res) => {
     res.send("API is running 🚀")
 })
 
-
-// ================= START SERVER =================
+// ================= START =================
 const PORT = process.env.PORT || 3000
 
 app.listen(PORT, () => {

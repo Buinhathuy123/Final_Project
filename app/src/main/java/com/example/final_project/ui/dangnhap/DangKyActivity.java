@@ -3,7 +3,9 @@ package com.example.final_project.ui.dangnhap;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.CountDownTimer;
+import android.text.Editable;
 import android.text.InputType;
+import android.text.TextWatcher;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.ImageView;
@@ -45,7 +47,6 @@ public class DangKyActivity extends AppCompatActivity {
     private boolean isPasswordVisible = false;
     private boolean isConfirmPasswordVisible = false;
 
-    // lưu tạm trước khi verify OTP
     private String tempUser, tempPass, tempEmail;
 
     @Override
@@ -86,11 +87,25 @@ public class DangKyActivity extends AppCompatActivity {
 
         setupTogglePassword();
         setupToggleConfirmPassword();
+
+        setupOtpInput(); // ⭐ thêm
         startCountdown();
     }
 
     // =========================
-    // GIỮ NGUYÊN VALIDATE + THÊM SEND OTP
+    // AUTO NHẢY OTP
+    // =========================
+    private void setupOtpInput() {
+
+        otp1.addTextChangedListener(new SimpleTextWatcher(() -> otp2.requestFocus()));
+        otp2.addTextChangedListener(new SimpleTextWatcher(() -> otp3.requestFocus()));
+        otp3.addTextChangedListener(new SimpleTextWatcher(() -> otp4.requestFocus()));
+        otp4.addTextChangedListener(new SimpleTextWatcher(() -> otp5.requestFocus()));
+        otp5.addTextChangedListener(new SimpleTextWatcher(() -> otp6.requestFocus()));
+    }
+
+    // =========================
+    // VALIDATE + SEND OTP
     // =========================
     private void validateAndSendOtp() {
 
@@ -99,7 +114,6 @@ public class DangKyActivity extends AppCompatActivity {
         String confirmPass = confirmPassword.getText().toString().trim();
         String mail = email.getText().toString().trim();
 
-        // ===== GIỮ NGUYÊN VALIDATE =====
         if (user.isEmpty()) {
             username.setError("Không được để trống username");
             return;
@@ -150,12 +164,10 @@ public class DangKyActivity extends AppCompatActivity {
             return;
         }
 
-        // ===== LƯU TẠM =====
         tempUser = user;
         tempPass = pass;
         tempEmail = mail;
 
-        // ===== GỬI OTP =====
         Map<String, String> body = new HashMap<>();
         body.put("email", mail);
 
@@ -209,7 +221,7 @@ public class DangKyActivity extends AppCompatActivity {
 
                 if (response.isSuccessful() && response.body() != null && response.body().isOk()) {
 
-                    register(); // ✅ CHỈ ĐĂNG KÝ SAU KHI OTP ĐÚNG
+                    register();
 
                 } else {
                     Toast.makeText(DangKyActivity.this,
@@ -228,7 +240,7 @@ public class DangKyActivity extends AppCompatActivity {
     }
 
     // =========================
-    // REGISTER (KHÔNG ĐỔI)
+    // REGISTER
     // =========================
     private void register() {
 
@@ -303,7 +315,7 @@ public class DangKyActivity extends AppCompatActivity {
     }
 
     // =========================
-    // TOGGLE PASSWORD (GIỮ NGUYÊN)
+    // TOGGLE PASSWORD
     // =========================
     private void setupTogglePassword() {
         togglePassword.setOnClickListener(v -> {
@@ -338,5 +350,30 @@ public class DangKyActivity extends AppCompatActivity {
         password.setText("");
         confirmPassword.setText("");
         email.setText("");
+    }
+
+    // =========================
+    // CLASS HỖ TRỢ OTP
+    // =========================
+    class SimpleTextWatcher implements TextWatcher {
+
+        private Runnable onTextChanged;
+
+        public SimpleTextWatcher(Runnable onTextChanged) {
+            this.onTextChanged = onTextChanged;
+        }
+
+        @Override
+        public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+
+        @Override
+        public void onTextChanged(CharSequence s, int start, int before, int count) {
+            if (s.length() == 1) {
+                onTextChanged.run();
+            }
+        }
+
+        @Override
+        public void afterTextChanged(Editable s) {}
     }
 }

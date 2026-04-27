@@ -1,5 +1,6 @@
 package com.example.final_project.ui.dangnhap;
 
+import android.app.AlertDialog;
 import android.os.Bundle;
 import android.text.InputType;
 import android.widget.EditText;
@@ -23,32 +24,35 @@ import retrofit2.Response;
 
 public class QuenMatKhauActivity extends AppCompatActivity {
 
-    private EditText edtUsername, edtCurrentPassword, edtNewPassword, edtConfirmPassword;
+    private EditText edtUsername, edtEmail, edtNewPassword, edtConfirmPassword;
     private LinearLayout btnSend;
     private ImageView btnBack;
 
-    private ImageView toggleCurrentPassword, toggleNewPassword, toggleConfirmPassword;
+    private ImageView toggleNewPassword, toggleConfirmPassword;
 
     private ApiService apiService;
 
-    private boolean isCurrentVisible = false;
     private boolean isNewVisible = false;
     private boolean isConfirmVisible = false;
+
+    private String savedEmail = "";
+    private String savedUsername = "";
+    private String savedNewPassword = "";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_quenmatkhau);
 
+        // ===== MAP VIEW =====
         edtUsername = findViewById(R.id.user_name);
-        edtCurrentPassword = findViewById(R.id.user_password); // 🔥 thêm
+        edtEmail = findViewById(R.id.email_user);
         edtNewPassword = findViewById(R.id.user_new_password);
         edtConfirmPassword = findViewById(R.id.confirm_user_new_password);
 
         btnSend = findViewById(R.id.btn_send);
         btnBack = findViewById(R.id.r36h1tttdukv);
 
-        toggleCurrentPassword = findViewById(R.id.toggle_user_password); // 🔥 thêm
         toggleNewPassword = findViewById(R.id.toggle_new_password);
         toggleConfirmPassword = findViewById(R.id.toggle_confirm_password);
 
@@ -56,7 +60,7 @@ public class QuenMatKhauActivity extends AppCompatActivity {
                 .getInstance()
                 .create(ApiService.class);
 
-        btnSend.setOnClickListener(v -> changePassword());
+        btnSend.setOnClickListener(v -> handleSend());
         btnBack.setOnClickListener(v -> finish());
 
         setupToggle();
@@ -66,18 +70,6 @@ public class QuenMatKhauActivity extends AppCompatActivity {
     // TOGGLE PASSWORD
     // =========================
     private void setupToggle() {
-
-        toggleCurrentPassword.setOnClickListener(v -> {
-            if (isCurrentVisible) {
-                edtCurrentPassword.setInputType(
-                        InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD);
-            } else {
-                edtCurrentPassword.setInputType(
-                        InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD);
-            }
-            edtCurrentPassword.setSelection(edtCurrentPassword.getText().length());
-            isCurrentVisible = !isCurrentVisible;
-        });
 
         toggleNewPassword.setOnClickListener(v -> {
             if (isNewVisible) {
@@ -105,51 +97,48 @@ public class QuenMatKhauActivity extends AppCompatActivity {
     }
 
     // =========================
-    // CHANGE PASSWORD
+    // STEP 1: VALIDATE + SEND OTP
     // =========================
-    private void changePassword() {
+    private void handleSend() {
 
         String username = edtUsername.getText().toString().trim();
-        String currentPassword = edtCurrentPassword.getText().toString().trim();
+        String email = edtEmail.getText().toString().trim();
         String newPassword = edtNewPassword.getText().toString().trim();
         String confirmPassword = edtConfirmPassword.getText().toString().trim();
 
-        // ===== CHECK RỖNG =====
+        // ===== CHECK =====
         if (username.isEmpty()) {
             edtUsername.setError("Không được để trống username");
             return;
         }
 
-        if (currentPassword.isEmpty()) {
-            edtCurrentPassword.setError("Không được để trống mật khẩu hiện tại");
+        if (email.isEmpty()) {
+            edtEmail.setError("Không được để trống email");
+            return;
+        }
+
+        if (!email.endsWith("@gmail.com")) {
+            edtEmail.setError("Email phải là @gmail.com");
             return;
         }
 
         if (newPassword.isEmpty()) {
-            edtNewPassword.setError("Không được để trống mật khẩu mới");
+            edtNewPassword.setError("Không được để trống mật khẩu");
             return;
         }
 
         if (confirmPassword.isEmpty()) {
-            edtConfirmPassword.setError("Không được để trống xác nhận mật khẩu");
+            edtConfirmPassword.setError("Không được để trống xác nhận");
             return;
         }
 
-        // ===== CHECK MATCH =====
         if (!newPassword.equals(confirmPassword)) {
-            edtConfirmPassword.setError("Vui lòng kiểm tra lại xác nhận mật khẩu");
+            edtConfirmPassword.setError("Mật khẩu không trùng");
             return;
         }
 
-        // ===== CHECK TRÙNG PASSWORD =====
-        if (newPassword.equals(currentPassword)) {
-            edtNewPassword.setError("Vui lòng chọn mật khẩu khác hiện tại");
-            return;
-        }
-
-        // ===== PASSWORD RULE =====
         if (newPassword.length() < 8) {
-            edtNewPassword.setError("Password phải ít nhất 8 ký tự");
+            edtNewPassword.setError("Ít nhất 8 ký tự");
             return;
         }
 
@@ -163,48 +152,126 @@ public class QuenMatKhauActivity extends AppCompatActivity {
             return;
         }
 
-        // ===== CALL API (GỬI CẢ CURRENT PASSWORD) =====
+        // ===== SAVE DATA =====
+        savedEmail = email;
+        savedUsername = username;
+        savedNewPassword = newPassword;
+
+        // ===== CALL SEND OTP =====
         Map<String, String> body = new HashMap<>();
         body.put("username", username);
-        body.put("currentPassword", currentPassword); // 🔥 thêm quan trọng
-        body.put("newPassword", newPassword);
+        body.put("email", email);
 
-        apiService.changePassword(body).enqueue(new Callback<ApiResponse>() {
-
+        apiService.sendOtpForgot(body).enqueue(new Callback<ApiResponse>() {
             @Override
             public void onResponse(Call<ApiResponse> call, Response<ApiResponse> response) {
 
                 if (!response.isSuccessful() || response.body() == null) {
-                    Toast.makeText(QuenMatKhauActivity.this,
-                            "Lỗi server",
-                            Toast.LENGTH_SHORT).show();
+                    Toast.makeText(QuenMatKhauActivity.this, "Lỗi server", Toast.LENGTH_SHORT).show();
                     return;
                 }
 
-                ApiResponse res = response.body();
-
-                if (res.isOk()) {
-
-                    Toast.makeText(QuenMatKhauActivity.this,
-                            "Đổi mật khẩu thành công",
-                            Toast.LENGTH_SHORT).show();
-
-                    finish();
-
+                if (response.body().isOk()) {
+                    Toast.makeText(QuenMatKhauActivity.this, "OTP đã gửi", Toast.LENGTH_SHORT).show();
+                    showOtpDialog();
                 } else {
-
-                    // 🔥 sai mật khẩu hiện tại hoặc user
                     Toast.makeText(QuenMatKhauActivity.this,
-                            "Vui lòng kiểm tra lại mật khẩu và tài khoản",
+                            response.body().getMessage(),
                             Toast.LENGTH_SHORT).show();
                 }
             }
 
             @Override
             public void onFailure(Call<ApiResponse> call, Throwable t) {
-                Toast.makeText(QuenMatKhauActivity.this,
-                        "Không kết nối được server",
-                        Toast.LENGTH_SHORT).show();
+                Toast.makeText(QuenMatKhauActivity.this, "Không kết nối server", Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+
+    // =========================
+    // STEP 2: NHẬP OTP
+    // =========================
+    private void showOtpDialog() {
+
+        EditText edtOtp = new EditText(this);
+        edtOtp.setHint("Nhập OTP");
+
+        new AlertDialog.Builder(this)
+                .setTitle("Xác nhận OTP")
+                .setView(edtOtp)
+                .setPositiveButton("Xác nhận", (dialog, which) -> {
+                    String otp = edtOtp.getText().toString().trim();
+                    verifyOtp(otp);
+                })
+                .setNegativeButton("Hủy", null)
+                .show();
+    }
+
+    // =========================
+    // STEP 3: VERIFY OTP
+    // =========================
+    private void verifyOtp(String otp) {
+
+        Map<String, String> body = new HashMap<>();
+        body.put("email", savedEmail);
+        body.put("otp", otp);
+
+        apiService.verifyOtpForgot(body).enqueue(new Callback<ApiResponse>() {
+            @Override
+            public void onResponse(Call<ApiResponse> call, Response<ApiResponse> response) {
+
+                if (!response.isSuccessful() || response.body() == null) {
+                    Toast.makeText(QuenMatKhauActivity.this, "Lỗi server", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+
+                if (response.body().isOk()) {
+                    changePassword();
+                } else {
+                    Toast.makeText(QuenMatKhauActivity.this, "OTP sai", Toast.LENGTH_SHORT).show();
+                }
+            }
+
+            @Override
+            public void onFailure(Call<ApiResponse> call, Throwable t) {
+                Toast.makeText(QuenMatKhauActivity.this, "Lỗi mạng", Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+
+    // =========================
+    // STEP 4: CHANGE PASSWORD
+    // =========================
+    private void changePassword() {
+
+        Map<String, String> body = new HashMap<>();
+        body.put("username", savedUsername);
+        body.put("newPassword", savedNewPassword);
+
+        apiService.changePasswordForgot(body).enqueue(new Callback<ApiResponse>() {
+            @Override
+            public void onResponse(Call<ApiResponse> call, Response<ApiResponse> response) {
+
+                if (!response.isSuccessful() || response.body() == null) {
+                    Toast.makeText(QuenMatKhauActivity.this, "Lỗi server", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+
+                if (response.body().isOk()) {
+                    Toast.makeText(QuenMatKhauActivity.this,
+                            "Đổi mật khẩu thành công",
+                            Toast.LENGTH_SHORT).show();
+                    finish();
+                } else {
+                    Toast.makeText(QuenMatKhauActivity.this,
+                            response.body().getMessage(),
+                            Toast.LENGTH_SHORT).show();
+                }
+            }
+
+            @Override
+            public void onFailure(Call<ApiResponse> call, Throwable t) {
+                Toast.makeText(QuenMatKhauActivity.this, "Lỗi mạng", Toast.LENGTH_SHORT).show();
             }
         });
     }
