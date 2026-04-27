@@ -1,11 +1,11 @@
-<LinearLayout
+<FrameLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:orientation="vertical"
-    android:background="#F6F8FB"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:background="#F6F8FB">
 
+    <!-- MAIN -->
     <ScrollView
         android:layout_width="match_parent"
         android:layout_height="match_parent">
@@ -26,13 +26,13 @@
 
             <!-- TITLE -->
             <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
                 android:text="Tạo tài khoản"
                 android:textColor="#333333"
                 android:textSize="26sp"
                 android:textStyle="bold"
-                android:layout_marginBottom="30dp"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"/>
+                android:layout_marginBottom="30dp"/>
 
             <!-- FORM -->
             <LinearLayout
@@ -44,12 +44,12 @@
 
                 <!-- USERNAME -->
                 <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
                     android:text="Tên người dùng"
                     android:textColor="#555555"
                     android:textSize="14sp"
-                    android:layout_marginBottom="6dp"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"/>
+                    android:layout_marginBottom="6dp"/>
 
                 <EditText
                     android:id="@+id/user_name"
@@ -62,13 +62,13 @@
 
                 <!-- PASSWORD -->
                 <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
                     android:text="Mật khẩu"
                     android:textColor="#555555"
                     android:textSize="14sp"
                     android:layout_marginTop="18dp"
-                    android:layout_marginBottom="6dp"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"/>
+                    android:layout_marginBottom="6dp"/>
 
                 <RelativeLayout
                     android:layout_width="match_parent"
@@ -95,15 +95,15 @@
                         android:layout_marginEnd="12dp"/>
                 </RelativeLayout>
 
-                <!-- CONFIRM PASSWORD -->
+                <!-- CONFIRM -->
                 <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
                     android:text="Xác nhận mật khẩu"
                     android:textColor="#555555"
                     android:textSize="14sp"
                     android:layout_marginTop="18dp"
-                    android:layout_marginBottom="6dp"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"/>
+                    android:layout_marginBottom="6dp"/>
 
                 <RelativeLayout
                     android:layout_width="match_parent"
@@ -132,13 +132,13 @@
 
                 <!-- EMAIL -->
                 <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
                     android:text="Email"
                     android:textColor="#555555"
                     android:textSize="14sp"
                     android:layout_marginTop="18dp"
-                    android:layout_marginBottom="6dp"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"/>
+                    android:layout_marginBottom="6dp"/>
 
                 <EditText
                     android:id="@+id/user_email"
@@ -150,16 +150,6 @@
                     android:inputType="textEmailAddress"
                     android:textColor="#333333"/>
 
-                <!-- RULE TEXT -->
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="• Username phải có chữ\n• Password ≥ 8 ký tự, có chữ in hoa và ký tự đặc biệt\n• Email phải là @gmail.com\n• Xác nhận mật khẩu phải trùng"
-                    android:textColor="#6C7A92"
-                    android:textSize="12sp"
-                    android:layout_marginTop="12dp"
-                    android:lineSpacingExtra="2dp"/>
-
             </LinearLayout>
 
             <!-- BUTTON -->
@@ -169,22 +159,85 @@
                 android:layout_height="55dp"
                 android:layout_marginTop="30dp"
                 android:background="@drawable/button_start"
-                android:gravity="center"
-                android:clickable="true"
-                android:focusable="true">
+                android:gravity="center">
 
                 <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
                     android:text="Đăng ký"
                     android:textColor="#FFFFFF"
                     android:textSize="18sp"
-                    android:textStyle="bold"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"/>
-
+                    android:textStyle="bold"/>
             </LinearLayout>
 
         </LinearLayout>
-
     </ScrollView>
 
-</LinearLayout>
+    <!-- OTP POPUP -->
+    <LinearLayout
+        android:id="@+id/layoutOtp"
+        android:visibility="gone"
+        android:clickable="true"
+        android:focusable="true"
+        android:orientation="vertical"
+        android:background="#80000000"
+        android:gravity="center"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <LinearLayout
+            android:layout_width="300dp"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="20dp"
+            android:background="@drawable/result_card">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Nhập mã OTP"
+                android:textSize="18sp"
+                android:textStyle="bold"/>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center"
+                android:layout_marginTop="16dp">
+
+                <EditText android:id="@+id/otp1" style="@style/style1"/>
+                <EditText android:id="@+id/otp2" style="@style/style1"/>
+                <EditText android:id="@+id/otp3" style="@style/style1"/>
+                <EditText android:id="@+id/otp4" style="@style/style1"/>
+                <EditText android:id="@+id/otp5" style="@style/style1"/>
+                <EditText android:id="@+id/otp6" style="@style/style1"/>
+
+            </LinearLayout>
+
+            <TextView
+                android:id="@+id/txtResend"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Gửi lại sau 30s"
+                android:layout_marginTop="10dp"/>
+
+            <LinearLayout
+                android:id="@+id/btnVerify"
+                android:layout_width="match_parent"
+                android:layout_height="50dp"
+                android:layout_marginTop="16dp"
+                android:background="@drawable/button_start"
+                android:gravity="center">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Xác nhận"
+                    android:textColor="#FFFFFF"/>
+            </LinearLayout>
+
+        </LinearLayout>
+    </LinearLayout>
+
+</FrameLayout>

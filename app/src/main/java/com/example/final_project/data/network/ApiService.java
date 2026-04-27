@@ -29,4 +29,9 @@ public interface ApiService {
     Call<ApiResponse> updateResult(@Body Map<String, Object> body);
     @GET("/user/{username}")
     Call<ApiResponse> getUser(@Path("username") String username);
+    @POST("send-otp")
+    Call<ApiResponse> sendOtp(@Body Map<String, String> body);
+
+    @POST("verify-otp")
+    Call<ApiResponse> verifyOtp(@Body Map<String, String> body);
 }

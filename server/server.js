@@ -5,8 +5,11 @@ const mongoose = require("mongoose")
 const bodyParser = require("body-parser")
 const cors = require("cors")
 const bcrypt = require("bcrypt")
+const nodemailer = require("nodemailer")
+
 
 const app = express()
+const otpStore = {}
 
 app.use(bodyParser.json())
 app.use(cors())
@@ -24,6 +27,14 @@ const AccountSchema = new mongoose.Schema({
     finalScore: { type: Number, default: null },
     level: { type: String, default: null },
     lastTestTime: { type: String, default: null }
+})
+
+const transporter = nodemailer.createTransport({
+    service: "gmail",
+    auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS
+    }
 })
 
 const Account = mongoose.model("accounts", AccountSchema)
@@ -74,7 +85,41 @@ app.post("/register", async (req, res) => {
     }
 })
 
+app.post("/send-otp", async (req, res) => {
+    try {
+        const { email } = req.body
 
+        if (!email) {
+            return res.json({ ok: false, message: "Thiếu email" })
+        }
+
+        const otp = Math.floor(100000 + Math.random() * 900000).toString()
+
+        otpStore[email] = otp
+
+        await transporter.sendMail({
+            from: process.env.EMAIL_USER,
+            to: email,
+            subject: "OTP xác nhận đăng ký",
+            text: `Mã OTP của bạn là: ${otp}`
+        })
+
+        res.json({ ok: true, message: "OTP đã gửi" })
+
+    } catch (err) {
+        res.json({ ok: false, message: err.message })
+    }
+})
+app.post("/verify-otp", (req, res) => {
+    const { email, otp } = req.body
+
+    if (otpStore[email] === otp) {
+        delete otpStore[email]
+        return res.json({ ok: true })
+    }
+
+    res.json({ ok: false, message: "OTP sai" })
+})
 // ================= LOGIN =================
 app.post("/login", async (req, res) => {
     try {
