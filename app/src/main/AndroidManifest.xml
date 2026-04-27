@@ -90,7 +90,7 @@
             android:name=".ui.dangnhap.QuenMatKhauActivity"
             android:exported="false" />
         <activity
-            android:name=".ui.ghiam.TrangTiepTheoGhiAmActivity"
+            android:name=".ui.ghiam.TrangGhiAmActivity"
             android:exported="false" />
         <activity android:name=".ui.hinhanh.KetQuaHinhAnhActivity" />
 

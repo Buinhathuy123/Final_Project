@@ -46,7 +46,6 @@ public class ChoKetQuaGhiAmActivity extends AppCompatActivity {
 
     private void processAudio(String pcmPath) {
         try {
-            long startTime = System.currentTimeMillis();
             float[] raw = PCMUtilActivity.readPCM16(pcmPath);
 
             float[] processedAudio = trimSilenceEdges(raw, 0.02);
@@ -57,7 +56,7 @@ public class ChoKetQuaGhiAmActivity extends AppCompatActivity {
                     txtTrangThai.setText("Phát hiện im lặng quá lâu");
                     handler.postDelayed(() -> {
                         Toast.makeText(this, "Vui lòng nói liên tục", Toast.LENGTH_SHORT).show();
-                        startActivity(new Intent(this, TrangTiepTheoGhiAmActivity.class));
+                        startActivity(new Intent(this, TrangGhiAmActivity.class));
                         finish();
                     }, 2000);
                 });
@@ -66,7 +65,6 @@ public class ChoKetQuaGhiAmActivity extends AppCompatActivity {
 
             VoiceModelActivity model = VoiceModelActivity.getInstance(this);
             float[] logits = model.infer(processedAudio);
-            long inferTime = System.currentTimeMillis() - startTime;
 
             // Xác định nhãn trầm cảm từ Voice
             int label = logits[1] > logits[0] ? 1 : 0;
@@ -76,14 +74,12 @@ public class ChoKetQuaGhiAmActivity extends AppCompatActivity {
             Log.d("FLOW_DEBUG", "Đã lưu kết quả Voice: " + label);
 
             runOnUiThread(() -> {
-                txtTrangThai.setText("Phân tích xong (" + inferTime + " ms)");
 
                 handler.postDelayed(() -> {
                     Intent i = new Intent(this, KetQuaGhiAmActivity.class);
                     i.putExtra("label_voice", label);
                     i.putExtra("score0", logits[0]);
                     i.putExtra("score1", logits[1]);
-                    i.putExtra("inferTime", inferTime);
 
                     startActivity(i);
                     finish();

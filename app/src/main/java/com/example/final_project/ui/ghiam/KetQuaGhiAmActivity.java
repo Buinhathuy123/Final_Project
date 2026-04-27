@@ -2,7 +2,6 @@ package com.example.final_project.ui.ghiam;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.View;
 import android.widget.TextView;
 
@@ -32,9 +31,28 @@ public class KetQuaGhiAmActivity extends AppCompatActivity {
         Intent intent = getIntent();
         int labelAudio = intent.getIntExtra("label_voice", 0);
 
-        displayVoiceResult(labelAudio);
+        //  Logic hiển thị
+        if (labelAudio == 1) {
+            txtKetQuaTongHop.setText("Có dấu hiệu trầm cảm");
+            txtKetQuaTongHop.setTextColor(
+                    ContextCompat.getColor(this, android.R.color.holo_red_dark)
+            );
+            txtMoTa.setText("Bạn nên trò chuyện với bác sĩ hoặc chuyên gia tâm lý");
+        } else {
+            txtKetQuaTongHop.setText("Không có dấu hiệu trầm cảm");
+            txtKetQuaTongHop.setTextColor(
+                    ContextCompat.getColor(this, android.R.color.holo_green_dark)
+            );
+            txtMoTa.setText("Tình trạng tinh thần của bạn hiện tại khá ổn định");
+        }
+
+        // Lưu kết quả voice
+        DataManager.saveVoiceResult(this, labelAudio);
+
+        // Gợi ý làm thêm phân tích ảnh
         checkAndShowSuggestion();
 
+        // Nút về trang chủ
         findViewById(R.id.btnFinish).setOnClickListener(v -> {
             Intent i = new Intent(KetQuaGhiAmActivity.this, TrangChuActivity.class);
             i.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
@@ -42,34 +60,14 @@ public class KetQuaGhiAmActivity extends AppCompatActivity {
             finish();
         });
 
+        // Nút chuyển sang phân tích khuôn mặt
         btnGoToFace.setOnClickListener(v -> {
             Intent i = new Intent(KetQuaGhiAmActivity.this, BatDauHinhAnhActivity.class);
             startActivity(i);
         });
     }
 
-    private void displayVoiceResult(int labelAudio) {
-        String resultTitle;
-        String advice;
-        int color;
-
-        if (labelAudio == 1) {
-            resultTitle = "CÓ DẤU HIỆU TRẦM CẢM";
-            color = android.R.color.holo_red_dark;
-            advice = "Phân tích giọng nói cho thấy các chỉ số liên quan đến trầm cảm.";
-        } else {
-            resultTitle = "TÂM TRẠNG BÌNH THƯỜNG";
-            color = android.R.color.holo_green_dark;
-            advice = "Giọng nói của bạn hiện tại không cho thấy dấu hiệu trầm cảm.";
-        }
-
-        txtKetQuaTongHop.setText(resultTitle);
-        txtKetQuaTongHop.setTextColor(ContextCompat.getColor(this, color));
-        txtMoTa.setText(advice);
-
-        DataManager.saveVoiceResult(this, labelAudio);
-    }
-
+    // Hàm gợi ý multimodal
     private void checkAndShowSuggestion() {
         if (!DataManager.isFaceCompleted(this)) {
             txtGoiY.setText("✨ Phân tích giọng nói xong rồi! Bạn hãy thử làm thêm bài 'Phân tích Hình ảnh' để có đánh giá đầy đủ nhất nhé.");
