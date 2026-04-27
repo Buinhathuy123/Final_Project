@@ -49,14 +49,12 @@ public interface ApiService {
     // =========================================================
 
     // 1. Gửi OTP (check username + email)
-    @POST("/forgot-password/send-otp")
+    @POST("/send-otp-forgot")
     Call<ApiResponse> sendOtpForgot(@Body Map<String, String> body);
 
-    // 2. Verify OTP
-    @POST("/forgot-password/verify-otp")
+    @POST("/verify-otp")
     Call<ApiResponse> verifyOtpForgot(@Body Map<String, String> body);
 
-    // 3. Đổi mật khẩu KHÔNG cần password cũ
-    @POST("/forgot-password/change-password")
+    @POST("/change-password")
     Call<ApiResponse> changePasswordForgot(@Body Map<String, String> body);
 }

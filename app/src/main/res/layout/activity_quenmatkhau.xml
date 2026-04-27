@@ -162,17 +162,10 @@
                     android:padding="15dp"
                     android:paddingEnd="45dp"
                     android:hint="Email"
-                    android:inputType="textPassword"
+                    android:inputType="textEmailAddress"
                     android:textSize="15sp"/>
 
-                <ImageView
-                    android:id="@+id/toggle_email_user"
-                    android:layout_width="22dp"
-                    android:layout_height="22dp"
-                    android:layout_alignParentEnd="true"
-                    android:layout_centerVertical="true"
-                    android:layout_marginEnd="12dp"
-                    android:src="@drawable/hidepass"/>
+
 
             </RelativeLayout>
 
