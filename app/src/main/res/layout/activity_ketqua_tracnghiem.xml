@@ -135,7 +135,7 @@
                 android:focusable="true">
 
                 <TextView
-                    android:text="Hoàn thành"
+                    android:text="Tiếp tục"
                     android:textColor="#FFFFFF"
                     android:textSize="18sp"
                     android:textStyle="bold"
