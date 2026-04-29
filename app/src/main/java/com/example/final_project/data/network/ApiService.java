@@ -2,6 +2,7 @@ package com.example.final_project.data.network;
 
 import com.example.final_project.data.model.Account;
 import com.example.final_project.data.model.ApiResponse;
+
 import java.util.Map;
 
 import retrofit2.Call;
@@ -18,14 +19,14 @@ public interface ApiService {
     Call<ApiResponse> register(@Body Account account);
 
     // ================= QUESTIONS =================
-    @GET("questions")
+    @GET("/questions")
     Call<ApiResponse> getQuestions(@Query("size") int size);
 
     // ================= LOGIN =================
     @POST("/login")
     Call<ApiResponse> login(@Body Account account);
 
-    // ================= CHANGE PASSWORD (OLD - cần password hiện tại) =================
+    // ================= CHANGE PASSWORD (CÓ PASSWORD CŨ) =================
     @POST("/change-password")
     Call<ApiResponse> changePassword(@Body Map<String, String> body);
 
@@ -37,24 +38,31 @@ public interface ApiService {
     @GET("/user/{username}")
     Call<ApiResponse> getUser(@Path("username") String username);
 
-    // ================= OTP REGISTER (GIỮ NGUYÊN) =================
+    // =========================================================
+    // 🔐 OTP ĐĂNG KÝ
+    // =========================================================
+
+    // Gửi OTP
     @POST("/send-otp")
     Call<ApiResponse> sendOtp(@Body Map<String, String> body);
 
+    // Verify OTP
     @POST("/verify-otp")
     Call<ApiResponse> verifyOtp(@Body Map<String, String> body);
 
     // =========================================================
-    // 🔥 OTP QUÊN MẬT KHẨU (MỚI - KHÔNG ẢNH HƯỞNG REGISTER)
+    // 🔥 OTP QUÊN MẬT KHẨU (TÁCH RIÊNG HOÀN TOÀN)
     // =========================================================
 
     // 1. Gửi OTP (check username + email)
     @POST("/send-otp-forgot")
     Call<ApiResponse> sendOtpForgot(@Body Map<String, String> body);
 
-    @POST("/verify-otp")
+    // 2. Verify OTP riêng
+    @POST("/verify-otp-forgot")
     Call<ApiResponse> verifyOtpForgot(@Body Map<String, String> body);
 
-    @POST("/change-password")
+    // 3. Đổi mật khẩu KHÔNG cần password cũ
+    @POST("/change-password-forgot")
     Call<ApiResponse> changePasswordForgot(@Body Map<String, String> body);
 }

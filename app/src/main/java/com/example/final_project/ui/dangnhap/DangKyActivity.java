@@ -7,11 +7,7 @@ import android.text.Editable;
 import android.text.InputType;
 import android.text.TextWatcher;
 import android.view.View;
-import android.widget.EditText;
-import android.widget.ImageView;
-import android.widget.LinearLayout;
-import android.widget.TextView;
-import android.widget.Toast;
+import android.widget.*;
 
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -25,49 +21,63 @@ import com.example.final_project.data.repository.AccountRepository;
 import java.util.HashMap;
 import java.util.Map;
 
-import retrofit2.Call;
-import retrofit2.Callback;
-import retrofit2.Response;
+import retrofit2.*;
 
 public class DangKyActivity extends AppCompatActivity {
 
     private EditText username, password, confirmPassword, email;
-    private LinearLayout btnRegister;
-    private ImageView togglePassword, toggleConfirmPassword;
-    private ImageView btnBack;
+    private LinearLayout btnRegister, btnVerify;
+    private ImageView togglePassword, toggleConfirmPassword, btnBack;
 
-    // ===== OTP =====
-    private LinearLayout layoutOtp, btnVerify;
+    private LinearLayout layoutOtp;
     private EditText otp1, otp2, otp3, otp4, otp5, otp6;
     private TextView txtResend;
 
-    private AccountRepository repository;
     private ApiService apiService;
+    private AccountRepository repository;
+
+    private String tempUser, tempPass, tempEmail;
 
     private boolean isPasswordVisible = false;
     private boolean isConfirmPasswordVisible = false;
 
-    private String tempUser, tempPass, tempEmail;
+    private boolean isSendingOtp = false;
+
+    private CountDownTimer countDownTimer;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_dangky);
 
-        // ===== FORM =====
+        initView();
+
+        apiService = RetrofitClient.getInstance().create(ApiService.class);
+        repository = new AccountRepository();
+
+        btnRegister.setOnClickListener(v -> validateAndSendOtp());
+        btnVerify.setOnClickListener(v -> verifyOtp());
+        btnBack.setOnClickListener(v -> finish());
+
+        setupTogglePassword();
+        setupToggleConfirmPassword();
+        setupOtpInput();
+    }
+
+    private void initView() {
         username = findViewById(R.id.user_name);
         password = findViewById(R.id.user_password);
         confirmPassword = findViewById(R.id.user_confirm_password);
         email = findViewById(R.id.user_email);
+
         btnRegister = findViewById(R.id.btn_register);
+        btnVerify = findViewById(R.id.btnVerify);
 
         togglePassword = findViewById(R.id.toggle_password);
         toggleConfirmPassword = findViewById(R.id.toggle_confirm_password);
         btnBack = findViewById(R.id.btn_back);
 
-        // ===== OTP =====
         layoutOtp = findViewById(R.id.layoutOtp);
-        btnVerify = findViewById(R.id.btnVerify);
         txtResend = findViewById(R.id.txtResend);
 
         otp1 = findViewById(R.id.otp1);
@@ -76,38 +86,14 @@ public class DangKyActivity extends AppCompatActivity {
         otp4 = findViewById(R.id.otp4);
         otp5 = findViewById(R.id.otp5);
         otp6 = findViewById(R.id.otp6);
-
-        repository = new AccountRepository();
-        apiService = RetrofitClient.getInstance().create(ApiService.class);
-
-        btnRegister.setOnClickListener(v -> validateAndSendOtp());
-        btnVerify.setOnClickListener(v -> verifyOtp());
-
-        btnBack.setOnClickListener(v -> finish());
-
-        setupTogglePassword();
-        setupToggleConfirmPassword();
-
-        setupOtpInput(); // ⭐ thêm
-        startCountdown();
     }
 
     // =========================
-    // AUTO NHẢY OTP
-    // =========================
-    private void setupOtpInput() {
-
-        otp1.addTextChangedListener(new SimpleTextWatcher(() -> otp2.requestFocus()));
-        otp2.addTextChangedListener(new SimpleTextWatcher(() -> otp3.requestFocus()));
-        otp3.addTextChangedListener(new SimpleTextWatcher(() -> otp4.requestFocus()));
-        otp4.addTextChangedListener(new SimpleTextWatcher(() -> otp5.requestFocus()));
-        otp5.addTextChangedListener(new SimpleTextWatcher(() -> otp6.requestFocus()));
-    }
-
-    // =========================
-    // VALIDATE + SEND OTP
+    // SEND OTP
     // =========================
     private void validateAndSendOtp() {
+
+        if (isSendingOtp) return;
 
         String user = username.getText().toString().trim();
         String pass = password.getText().toString().trim();
@@ -119,54 +105,27 @@ public class DangKyActivity extends AppCompatActivity {
             return;
         }
 
-        if (pass.isEmpty()) {
-            password.setError("Không được để trống password");
-            return;
-        }
-
-        if (confirmPass.isEmpty()) {
-            confirmPassword.setError("Không được để trống xác nhận mật khẩu");
-            return;
-        }
-
-        if (mail.isEmpty()) {
-            email.setError("Không được để trống email");
+        if (pass.length() < 8) {
+            password.setError("Password >= 8 ký tự");
             return;
         }
 
         if (!pass.equals(confirmPass)) {
-            confirmPassword.setError("Vui lòng kiểm tra lại xác nhận mật khẩu");
-            return;
-        }
-
-        if (!user.matches(".*[a-zA-Z].*")) {
-            username.setError("Username phải có chữ");
-            return;
-        }
-
-        if (pass.length() < 8) {
-            password.setError("Password phải ít nhất 8 ký tự");
-            return;
-        }
-
-        if (!pass.matches(".*[A-Z].*")) {
-            password.setError("Phải có chữ in hoa");
-            return;
-        }
-
-        if (!pass.matches(".*[!@#$%^&*()_+=|<>?{}\\[\\]~-].*")) {
-            password.setError("Phải có ký tự đặc biệt");
+            confirmPassword.setError("Mật khẩu không khớp");
             return;
         }
 
         if (!mail.endsWith("@gmail.com")) {
-            email.setError("Email phải là @gmail.com");
+            email.setError("Email phải là gmail");
             return;
         }
 
         tempUser = user;
         tempPass = pass;
         tempEmail = mail;
+
+        isSendingOtp = true;
+        btnRegister.setEnabled(false);
 
         Map<String, String> body = new HashMap<>();
         body.put("email", mail);
@@ -175,26 +134,29 @@ public class DangKyActivity extends AppCompatActivity {
             @Override
             public void onResponse(Call<ApiResponse> call, Response<ApiResponse> response) {
 
+                isSendingOtp = false;
+                btnRegister.setEnabled(true);
+
                 if (response.isSuccessful() && response.body() != null && response.body().isOk()) {
 
-                    Toast.makeText(DangKyActivity.this,
-                            "Đã gửi OTP",
-                            Toast.LENGTH_SHORT).show();
+                    Toast.makeText(DangKyActivity.this, "Đã gửi OTP", Toast.LENGTH_SHORT).show();
 
                     layoutOtp.setVisibility(View.VISIBLE);
 
+                    clearOtp();
+                    startCountdown();
+
                 } else {
-                    Toast.makeText(DangKyActivity.this,
-                            "Gửi OTP thất bại",
-                            Toast.LENGTH_SHORT).show();
+                    Toast.makeText(DangKyActivity.this, "Gửi OTP thất bại", Toast.LENGTH_SHORT).show();
                 }
             }
 
             @Override
             public void onFailure(Call<ApiResponse> call, Throwable t) {
-                Toast.makeText(DangKyActivity.this,
-                        "Không kết nối được server",
-                        Toast.LENGTH_SHORT).show();
+                isSendingOtp = false;
+                btnRegister.setEnabled(true);
+
+                Toast.makeText(DangKyActivity.this, "Không kết nối server", Toast.LENGTH_SHORT).show();
             }
         });
     }
@@ -211,6 +173,11 @@ public class DangKyActivity extends AppCompatActivity {
                 otp5.getText().toString() +
                 otp6.getText().toString();
 
+        if (otp.length() != 6) {
+            Toast.makeText(this, "OTP phải đủ 6 số", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
         Map<String, String> body = new HashMap<>();
         body.put("email", tempEmail);
         body.put("otp", otp);
@@ -220,21 +187,15 @@ public class DangKyActivity extends AppCompatActivity {
             public void onResponse(Call<ApiResponse> call, Response<ApiResponse> response) {
 
                 if (response.isSuccessful() && response.body() != null && response.body().isOk()) {
-
                     register();
-
                 } else {
-                    Toast.makeText(DangKyActivity.this,
-                            "Vui lòng kiểm tra lại OTP",
-                            Toast.LENGTH_SHORT).show();
+                    Toast.makeText(DangKyActivity.this, "OTP sai", Toast.LENGTH_SHORT).show();
                 }
             }
 
             @Override
             public void onFailure(Call<ApiResponse> call, Throwable t) {
-                Toast.makeText(DangKyActivity.this,
-                        "Lỗi mạng",
-                        Toast.LENGTH_SHORT).show();
+                Toast.makeText(DangKyActivity.this, "Lỗi mạng", Toast.LENGTH_SHORT).show();
             }
         });
     }
@@ -251,53 +212,39 @@ public class DangKyActivity extends AppCompatActivity {
             @Override
             public void onResponse(Call<ApiResponse> call, Response<ApiResponse> response) {
 
-                if (response.isSuccessful() && response.body() != null) {
+                if (response.body() != null && response.body().isOk()) {
 
-                    ApiResponse res = response.body();
+                    Toast.makeText(DangKyActivity.this, "Đăng ký thành công", Toast.LENGTH_SHORT).show();
 
-                    if (res.isOk()) {
-
-                        Toast.makeText(DangKyActivity.this,
-                                "Đăng ký thành công",
-                                Toast.LENGTH_SHORT).show();
-
-                        startActivity(new Intent(
-                                DangKyActivity.this,
-                                DangNhapActivity.class
-                        ));
-                        finish();
-
-                    } else {
-                        Toast.makeText(DangKyActivity.this,
-                                "Vui lòng chọn tên tài khoản khác",
-                                Toast.LENGTH_SHORT).show();
-
-                        clearAllFields();
-                    }
+                    startActivity(new Intent(DangKyActivity.this, DangNhapActivity.class));
+                    finish();
 
                 } else {
-                    Toast.makeText(DangKyActivity.this,
-                            "Lỗi server",
-                            Toast.LENGTH_SHORT).show();
+                    Toast.makeText(DangKyActivity.this, "Username đã tồn tại", Toast.LENGTH_SHORT).show();
                 }
             }
 
             @Override
             public void onFailure(Call<ApiResponse> call, Throwable t) {
-
-                Toast.makeText(DangKyActivity.this,
-                        "Không kết nối được server",
-                        Toast.LENGTH_SHORT).show();
+                Toast.makeText(DangKyActivity.this, "Lỗi server", Toast.LENGTH_SHORT).show();
             }
         });
     }
 
     // =========================
-    // RESEND OTP
+    // OTP UI
     // =========================
+    private void clearOtp() {
+        otp1.setText(""); otp2.setText(""); otp3.setText("");
+        otp4.setText(""); otp5.setText(""); otp6.setText("");
+        otp1.requestFocus();
+    }
+
     private void startCountdown() {
 
-        new CountDownTimer(30000, 1000) {
+        if (countDownTimer != null) countDownTimer.cancel();
+
+        countDownTimer = new CountDownTimer(30000, 1000) {
 
             public void onTick(long millisUntilFinished) {
                 txtResend.setText("Gửi lại sau " + millisUntilFinished / 1000 + "s");
@@ -307,25 +254,37 @@ public class DangKyActivity extends AppCompatActivity {
             public void onFinish() {
                 txtResend.setText("Gửi lại OTP");
                 txtResend.setEnabled(true);
-
                 txtResend.setOnClickListener(v -> validateAndSendOtp());
             }
 
         }.start();
     }
 
-    // =========================
-    // TOGGLE PASSWORD
-    // =========================
+    private void setupOtpInput() {
+        otp1.addTextChangedListener(new SimpleTextWatcher(() -> otp2.requestFocus()));
+        otp2.addTextChangedListener(new SimpleTextWatcher(() -> otp3.requestFocus()));
+        otp3.addTextChangedListener(new SimpleTextWatcher(() -> otp4.requestFocus()));
+        otp4.addTextChangedListener(new SimpleTextWatcher(() -> otp5.requestFocus()));
+        otp5.addTextChangedListener(new SimpleTextWatcher(() -> otp6.requestFocus()));
+    }
+
+    class SimpleTextWatcher implements TextWatcher {
+        Runnable next;
+        SimpleTextWatcher(Runnable next) { this.next = next; }
+
+        public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+        public void afterTextChanged(Editable s) {}
+
+        public void onTextChanged(CharSequence s, int start, int before, int count) {
+            if (s.length() == 1) next.run();
+        }
+    }
+
     private void setupTogglePassword() {
         togglePassword.setOnClickListener(v -> {
-
-            if (isPasswordVisible) {
-                password.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD);
-            } else {
-                password.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD);
-            }
-
+            password.setInputType(isPasswordVisible ?
+                    InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD :
+                    InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD);
             password.setSelection(password.getText().length());
             isPasswordVisible = !isPasswordVisible;
         });
@@ -333,47 +292,11 @@ public class DangKyActivity extends AppCompatActivity {
 
     private void setupToggleConfirmPassword() {
         toggleConfirmPassword.setOnClickListener(v -> {
-
-            if (isConfirmPasswordVisible) {
-                confirmPassword.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD);
-            } else {
-                confirmPassword.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD);
-            }
-
+            confirmPassword.setInputType(isConfirmPasswordVisible ?
+                    InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD :
+                    InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD);
             confirmPassword.setSelection(confirmPassword.getText().length());
             isConfirmPasswordVisible = !isConfirmPasswordVisible;
         });
-    }
-
-    private void clearAllFields() {
-        username.setText("");
-        password.setText("");
-        confirmPassword.setText("");
-        email.setText("");
-    }
-
-    // =========================
-    // CLASS HỖ TRỢ OTP
-    // =========================
-    class SimpleTextWatcher implements TextWatcher {
-
-        private Runnable onTextChanged;
-
-        public SimpleTextWatcher(Runnable onTextChanged) {
-            this.onTextChanged = onTextChanged;
-        }
-
-        @Override
-        public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
-
-        @Override
-        public void onTextChanged(CharSequence s, int start, int before, int count) {
-            if (s.length() == 1) {
-                onTextChanged.run();
-            }
-        }
-
-        @Override
-        public void afterTextChanged(Editable s) {}
     }
 }
