@@ -10,13 +10,24 @@ const nodemailer = require("nodemailer")
 const app = express()
 const otpStore = {}
 
+// ================= MIDDLEWARE =================
 app.use(bodyParser.json())
 app.use(cors())
 
+// 🔥 LOG ALL REQUEST (QUAN TRỌNG NHẤT)
+app.use((req, res, next) => {
+    console.log("===================================")
+    console.log("📌 METHOD:", req.method)
+    console.log("📌 URL:", req.url)
+    console.log("📌 BODY:", req.body)
+    console.log("===================================")
+    next()
+})
+
 // ================= MongoDB =================
 mongoose.connect(process.env.MONGO_URI)
-.then(() => console.log("MongoDB Connected"))
-.catch(err => console.log("Mongo Error:", err))
+.then(() => console.log("✅ MongoDB Connected"))
+.catch(err => console.log("❌ Mongo Error:", err))
 
 // ================= Schema =================
 const AccountSchema = new mongoose.Schema({
@@ -30,6 +41,7 @@ const AccountSchema = new mongoose.Schema({
 
 const Account = mongoose.model("accounts", AccountSchema)
 
+// ================= MAIL =================
 const transporter = nodemailer.createTransport({
     service: "gmail",
     auth: {
@@ -40,23 +52,19 @@ const transporter = nodemailer.createTransport({
 
 // ================= REGISTER =================
 app.post("/register", async (req, res) => {
+    console.log("🔥 HIT /register")
+
     try {
         const { username, password, email } = req.body
 
         if (!username || !password) {
-            return res.json({
-                ok: false,
-                message: "Thiếu username hoặc password"
-            })
+            return res.json({ ok: false, message: "Thiếu username hoặc password" })
         }
 
         const exist = await Account.findOne({ username })
 
         if (exist) {
-            return res.json({
-                ok: false,
-                message: "Username đã tồn tại"
-            })
+            return res.json({ ok: false, message: "Username đã tồn tại" })
         }
 
         const hashedPassword = await bcrypt.hash(password, 10)
@@ -69,6 +77,8 @@ app.post("/register", async (req, res) => {
 
         await account.save()
 
+        console.log("✅ REGISTER SUCCESS:", username)
+
         res.json({
             ok: true,
             message: "Register success",
@@ -76,17 +86,19 @@ app.post("/register", async (req, res) => {
         })
 
     } catch (err) {
-        res.json({
-            ok: false,
-            message: err.message
-        })
+        console.log("❌ REGISTER ERROR:", err)
+        res.json({ ok: false, message: err.message })
     }
 })
 
-// ================= SEND OTP (REGISTER - GIỮ NGUYÊN) =================
+// ================= SEND OTP =================
 app.post("/send-otp", async (req, res) => {
+    console.log("🔥 HIT /send-otp")
+
     try {
         const { email } = req.body
+
+        console.log("📩 EMAIL:", email)
 
         if (!email) {
             return res.json({ ok: false, message: "Thiếu email" })
@@ -94,10 +106,14 @@ app.post("/send-otp", async (req, res) => {
 
         const otp = Math.floor(100000 + Math.random() * 900000).toString()
 
+        console.log("🔑 OTP:", otp)
+
         otpStore[email] = {
             otp,
             expire: Date.now() + 5 * 60 * 1000
         }
+
+        console.log("📦 OTP STORE:", otpStore[email])
 
         await transporter.sendMail({
             from: process.env.EMAIL_USER,
@@ -106,72 +122,44 @@ app.post("/send-otp", async (req, res) => {
             text: `Mã OTP của bạn là: ${otp}`
         })
 
+        console.log("✅ EMAIL SENT SUCCESS")
+
         res.json({ ok: true, message: "OTP đã gửi" })
 
     } catch (err) {
+        console.log("❌ SEND OTP ERROR:", err)
         res.json({ ok: false, message: err.message })
     }
 })
 
-// ================= SEND OTP (QUÊN MẬT KHẨU - MỚI) =================
-app.post("/send-otp-forgot", async (req, res) => {
-    try {
-        const { username, email } = req.body
-
-        if (!username || !email) {
-            return res.json({ ok: false, message: "Thiếu dữ liệu" })
-        }
-
-        const user = await Account.findOne({ username })
-
-        if (!user) {
-            return res.json({ ok: false, message: "User không tồn tại" })
-        }
-
-        // 🔥 CHECK EMAIL ĐÚNG USER
-        if (user.email !== email) {
-            return res.json({ ok: false, message: "Email không đúng" })
-        }
-
-        const otp = Math.floor(100000 + Math.random() * 900000).toString()
-
-        otpStore[email] = {
-            otp,
-            expire: Date.now() + 5 * 60 * 1000
-        }
-
-        await transporter.sendMail({
-            from: process.env.EMAIL_USER,
-            to: email,
-            subject: "OTP khôi phục mật khẩu",
-            text: `Mã OTP của bạn là: ${otp}`
-        })
-
-        res.json({ ok: true, message: "OTP đã gửi (forgot)" })
-
-    } catch (err) {
-        res.json({ ok: false, message: err.message })
-    }
-})
-
-// ================= VERIFY OTP (DÙNG CHUNG) =================
+// ================= VERIFY OTP =================
 app.post("/verify-otp", (req, res) => {
+    console.log("🔥 HIT /verify-otp")
+
     const { email, otp } = req.body
+
+    console.log("📩 EMAIL:", email)
+    console.log("🔑 OTP INPUT:", otp)
 
     const data = otpStore[email]
 
     if (!data) {
+        console.log("❌ OTP NOT FOUND")
         return res.json({ ok: false, message: "OTP không tồn tại" })
     }
 
     if (Date.now() > data.expire) {
+        console.log("❌ OTP EXPIRED")
         delete otpStore[email]
         return res.json({ ok: false, message: "OTP hết hạn" })
     }
 
     if (data.otp !== otp) {
+        console.log("❌ OTP WRONG")
         return res.json({ ok: false, message: "OTP sai" })
     }
+
+    console.log("✅ OTP VERIFIED")
 
     delete otpStore[email]
     return res.json({ ok: true })
@@ -179,26 +167,24 @@ app.post("/verify-otp", (req, res) => {
 
 // ================= LOGIN =================
 app.post("/login", async (req, res) => {
+    console.log("🔥 HIT /login")
+
     try {
         const { username, password } = req.body
 
         const user = await Account.findOne({ username })
 
         if (!user) {
-            return res.json({
-                ok: false,
-                message: "Sai tài khoản hoặc mật khẩu"
-            })
+            return res.json({ ok: false, message: "Sai tài khoản hoặc mật khẩu" })
         }
 
         const isMatch = await bcrypt.compare(password, user.password)
 
         if (!isMatch) {
-            return res.json({
-                ok: false,
-                message: "Sai tài khoản hoặc mật khẩu"
-            })
+            return res.json({ ok: false, message: "Sai tài khoản hoặc mật khẩu" })
         }
+
+        console.log("✅ LOGIN SUCCESS:", username)
 
         res.json({
             ok: true,
@@ -207,129 +193,8 @@ app.post("/login", async (req, res) => {
         })
 
     } catch (err) {
-        res.json({
-            ok: false,
-            message: err.message
-        })
-    }
-})
-
-// ================= CHANGE PASSWORD (CHO QUÊN PASS - KHÔNG CẦN currentPassword) =================
-app.post("/change-password", async (req, res) => {
-    try {
-        const { username, newPassword } = req.body
-
-        if (!username || !newPassword) {
-            return res.json({
-                ok: false,
-                message: "Thiếu dữ liệu"
-            })
-        }
-
-        const user = await Account.findOne({ username })
-
-        if (!user) {
-            return res.json({
-                ok: false,
-                message: "User không tồn tại"
-            })
-        }
-
-        // 🔥 KHÔNG CHO TRÙNG PASSWORD CŨ
-        const isSame = await bcrypt.compare(newPassword, user.password)
-
-        if (isSame) {
-            return res.json({
-                ok: false,
-                message: "Mật khẩu mới không được trùng mật khẩu cũ"
-            })
-        }
-
-        const hashedPassword = await bcrypt.hash(newPassword, 10)
-
-        user.password = hashedPassword
-        await user.save()
-
-        return res.json({
-            ok: true,
-            message: "Đổi mật khẩu thành công"
-        })
-
-    } catch (err) {
-        return res.json({
-            ok: false,
-            message: err.message
-        })
-    }
-})
-
-// ================= UPDATE RESULT =================
-app.post("/update-result", async (req, res) => {
-    try {
-        const { username, finalScore, level } = req.body
-
-        if (!username) {
-            return res.json({
-                ok: false,
-                message: "Thiếu username"
-            })
-        }
-
-        const now = new Date().toLocaleString("vi-VN")
-
-        const user = await Account.findOneAndUpdate(
-            { username: username },
-            {
-                finalScore: finalScore,
-                level: level,
-                lastTestTime: now
-            },
-            { new: true }
-        )
-
-        if (!user) {
-            return res.json({
-                ok: false,
-                message: "Không tìm thấy user"
-            })
-        }
-
-        res.json({
-            ok: true,
-            message: "Lưu kết quả thành công",
-            data: user
-        })
-
-    } catch (err) {
-        res.json({
-            ok: false,
-            message: err.message
-        })
-    }
-})
-
-// ================= GET USER =================
-app.get("/user/:username", async (req, res) => {
-    try {
-        const user = await Account.findOne({ username: req.params.username })
-
-        if (!user) {
-            return res.json({
-                ok: false,
-                message: "Không tìm thấy user"
-            })
-        }
-
-        res.json({
-            ok: true,
-            data: user
-        })
-
-    } catch (err) {
-        res.json({
-            ok: false,
-            message: err.message
-        })
+        console.log("❌ LOGIN ERROR:", err)
+        res.json({ ok: false, message: err.message })
     }
 })
 
@@ -342,5 +207,5 @@ app.get("/", (req, res) => {
 const PORT = process.env.PORT || 3000
 
 app.listen(PORT, () => {
-    console.log("Server running on port " + PORT)
+    console.log("🚀 Server running on port " + PORT)
 })
