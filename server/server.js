@@ -95,65 +95,45 @@ app.post("/register", async (req, res) => {
 
 // ================= SEND OTP =================
 app.post("/send-otp", async (req, res) => {
-    console.log("===================================")
     console.log("🔥 HIT /send-otp")
 
     try {
         const { email } = req.body
 
-        console.log("📩 EMAIL:", email)
-
         if (!email) {
-            console.log("❌ THIẾU EMAIL")
             return res.json({ ok: false, message: "Thiếu email" })
         }
 
-        // 🔑 TẠO OTP
         const otp = Math.floor(100000 + Math.random() * 900000).toString()
-        console.log("🔑 OTP:", otp)
 
-        // 📦 LƯU OTP
         otpStore[email] = {
             otp,
             expire: Date.now() + 5 * 60 * 1000
         }
 
-        console.log("📦 OTP STORE:", otpStore[email])
+        console.log("📩 EMAIL:", email)
+        console.log("🔑 OTP:", otp)
 
-        // ✉️ GỬI EMAIL
-        console.log("📤 ĐANG GỬI EMAIL...")
-
-        const info = await transporter.sendMail({
+        // ⚠️ KHÔNG await -> tránh treo server
+        transporter.sendMail({
             from: process.env.EMAIL_USER,
             to: email,
             subject: "OTP xác nhận đăng ký",
             text: `Mã OTP của bạn là: ${otp}`
+        }).then(() => {
+            console.log("✅ EMAIL SENT SUCCESS")
+        }).catch(err => {
+            console.log("❌ EMAIL ERROR:", err.message)
         })
 
-        // ✅ SUCCESS
-        console.log("✅ EMAIL SENT SUCCESS")
-        console.log("📨 RESPONSE:", info.response)
-        console.log("===================================")
-
-        return res.json({
-            ok: true,
-            message: "OTP đã gửi"
-        })
+        // ✅ trả về ngay
+        res.json({ ok: true, message: "OTP đã gửi (async)" })
 
     } catch (err) {
-        // ❌ ERROR
-        console.log("❌ SEND OTP ERROR FULL:", err)
-        console.log("❌ MESSAGE:", err.message)
-        console.log("❌ STACK:", err.stack)
-        console.log("===================================")
-
-        return res.json({
-            ok: false,
-            message: err.message
-        })
+        console.log("❌ SEND OTP ERROR:", err)
+        res.json({ ok: false, message: err.message })
     }
 })
-
 // ================= VERIFY OTP =================
 app.post("/verify-otp", (req, res) => {
     console.log("🔥 HIT /verify-otp")
