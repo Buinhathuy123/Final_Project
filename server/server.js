@@ -127,9 +127,11 @@ app.post("/send-otp", async (req, res) => {
         res.json({ ok: true, message: "OTP đã gửi" })
 
     } catch (err) {
-        console.log("❌ SEND OTP ERROR:", err)
-        res.json({ ok: false, message: err.message })
-    }
+          console.log("❌ SEND OTP ERROR FULL:", err)
+          console.log("❌ MESSAGE:", err.message)
+          console.log("❌ STACK:", err.stack)
+          res.json({ ok: false, message: err.message })
+      }
 })
 
 // ================= VERIFY OTP =================
