@@ -95,6 +95,7 @@ app.post("/register", async (req, res) => {
 
 // ================= SEND OTP =================
 app.post("/send-otp", async (req, res) => {
+    console.log("===================================")
     console.log("🔥 HIT /send-otp")
 
     try {
@@ -103,13 +104,15 @@ app.post("/send-otp", async (req, res) => {
         console.log("📩 EMAIL:", email)
 
         if (!email) {
+            console.log("❌ THIẾU EMAIL")
             return res.json({ ok: false, message: "Thiếu email" })
         }
 
+        // 🔑 TẠO OTP
         const otp = Math.floor(100000 + Math.random() * 900000).toString()
-
         console.log("🔑 OTP:", otp)
 
+        // 📦 LƯU OTP
         otpStore[email] = {
             otp,
             expire: Date.now() + 5 * 60 * 1000
@@ -117,23 +120,38 @@ app.post("/send-otp", async (req, res) => {
 
         console.log("📦 OTP STORE:", otpStore[email])
 
-        await transporter.sendMail({
+        // ✉️ GỬI EMAIL
+        console.log("📤 ĐANG GỬI EMAIL...")
+
+        const info = await transporter.sendMail({
             from: process.env.EMAIL_USER,
             to: email,
             subject: "OTP xác nhận đăng ký",
             text: `Mã OTP của bạn là: ${otp}`
         })
 
+        // ✅ SUCCESS
         console.log("✅ EMAIL SENT SUCCESS")
+        console.log("📨 RESPONSE:", info.response)
+        console.log("===================================")
 
-        res.json({ ok: true, message: "OTP đã gửi" })
+        return res.json({
+            ok: true,
+            message: "OTP đã gửi"
+        })
 
     } catch (err) {
-          console.log("❌ SEND OTP ERROR FULL:", err)
-          console.log("❌ MESSAGE:", err.message)
-          console.log("❌ STACK:", err.stack)
-          res.json({ ok: false, message: err.message })
-      }
+        // ❌ ERROR
+        console.log("❌ SEND OTP ERROR FULL:", err)
+        console.log("❌ MESSAGE:", err.message)
+        console.log("❌ STACK:", err.stack)
+        console.log("===================================")
+
+        return res.json({
+            ok: false,
+            message: err.message
+        })
+    }
 })
 
 // ================= VERIFY OTP =================
