@@ -25,7 +25,8 @@
     "express": "^4.22.1",
     "mongodb": "^5.7.0",
     "mongoose": "^9.2.4",
-    "nodemailer": "^8.0.7"
+    "nodemailer": "^8.0.7",
+    "resend": "^6.12.2"
   },
   "devDependencies": {
     "nodemon": "^2.0.22"
