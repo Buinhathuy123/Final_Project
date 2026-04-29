@@ -58,7 +58,11 @@
                     android:background="@drawable/input_square"
                     android:padding="12dp"
                     android:hint="Nhập tên người dùng"
-                    android:textColor="#333333"/>
+                    android:textColor="#333333"
+                    android:inputType="textPersonName"
+                    android:singleLine="true"
+                    android:maxLines="1"
+                    android:imeOptions="actionNext"/>
 
                 <!-- PASSWORD -->
                 <TextView

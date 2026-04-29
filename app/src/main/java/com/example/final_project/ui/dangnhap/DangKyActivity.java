@@ -106,6 +106,11 @@ public class DangKyActivity extends AppCompatActivity {
             email.setError("Không được để trống email");
             return;
         }
+        if (!android.util.Patterns.EMAIL_ADDRESS.matcher(mail).matches()
+                || !mail.endsWith("@gmail.com")) {
+            email.setError("Email phải hợp lệ và có đuôi @gmail.com");
+            return;
+        }
 
         // ===== CALL API =====
         Account account = new Account(user, pass, mail);

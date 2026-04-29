@@ -2,6 +2,7 @@ package com.example.final_project.ui.dangnhap;
 
 import android.os.Bundle;
 import android.text.InputType;
+import android.util.Patterns;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -53,7 +54,6 @@ public class QuenMatKhauActivity extends AppCompatActivity {
         apiService = RetrofitClient.getInstance().create(ApiService.class);
 
         btnBack.setOnClickListener(v -> finish());
-
         btnSend.setOnClickListener(v -> handleChangePassword());
 
         setupToggle();
@@ -65,25 +65,48 @@ public class QuenMatKhauActivity extends AppCompatActivity {
     private void handleChangePassword() {
 
         String username = edtUsername.getText().toString().trim();
-        String email = edtEmail.getText().toString().trim();
+        String email = edtEmail.getText().toString().trim().toLowerCase();
         String newPassword = edtNewPassword.getText().toString().trim();
         String confirmPassword = edtConfirmPassword.getText().toString().trim();
 
-        if (username.isEmpty() || email.isEmpty() || newPassword.isEmpty() || confirmPassword.isEmpty()) {
-            Toast.makeText(this, "Vui lòng nhập đầy đủ", Toast.LENGTH_SHORT).show();
+        // ================= VALIDATE =================
+
+        // Username
+        if (username.isEmpty()) {
+            edtUsername.setError("Không được để trống username");
             return;
         }
 
+        if (!username.matches(".*[a-zA-Z].*")) {
+            edtUsername.setError("Username phải có chữ");
+            return;
+        }
+
+        // Email
+        if (email.isEmpty()) {
+            edtEmail.setError("Không được để trống email");
+            return;
+        }
+
+        if (!Patterns.EMAIL_ADDRESS.matcher(email).matches()
+                || !email.endsWith("@gmail.com")) {
+            edtEmail.setError("Email phải hợp lệ và có đuôi @gmail.com");
+            return;
+        }
+
+        // Password
+        if (!isValidPassword(newPassword)) {
+            edtNewPassword.setError("≥8 ký tự, có chữ hoa + ký tự đặc biệt");
+            return;
+        }
+
+        // Confirm
         if (!newPassword.equals(confirmPassword)) {
             edtConfirmPassword.setError("Mật khẩu không khớp");
             return;
         }
 
-        if (!isValidPassword(newPassword)) {
-            edtNewPassword.setError("≥ 8 ký tự + chữ hoa + ký tự đặc biệt");
-            return;
-        }
-
+        // ================= API =================
         Map<String, String> body = new HashMap<>();
         body.put("username", username);
         body.put("email", email);
@@ -115,7 +138,7 @@ public class QuenMatKhauActivity extends AppCompatActivity {
     }
 
     // =========================
-    // PASSWORD RULE
+    // PASSWORD RULE (GIỐNG ĐĂNG KÝ)
     // =========================
     private boolean isValidPassword(String password) {
 
