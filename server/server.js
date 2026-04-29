@@ -5,10 +5,7 @@ const mongoose = require("mongoose")
 const bodyParser = require("body-parser")
 const cors = require("cors")
 const bcrypt = require("bcrypt")
-
-// 🔥 THÊM RESEND
-const { Resend } = require("resend")
-const resend = new Resend(process.env.RESEND_API_KEY)
+const nodemailer = require("nodemailer")
 
 const app = express()
 const otpStore = {}
@@ -17,7 +14,7 @@ const otpStore = {}
 app.use(bodyParser.json())
 app.use(cors())
 
-// 🔥 LOG ALL REQUEST
+// LOG REQUEST
 app.use((req, res, next) => {
     console.log("===================================")
     console.log("📌 METHOD:", req.method)
@@ -43,6 +40,15 @@ const AccountSchema = new mongoose.Schema({
 })
 
 const Account = mongoose.model("accounts", AccountSchema)
+
+// ================= MAIL (GMAIL SMTP) =================
+const transporter = nodemailer.createTransport({
+    service: "gmail",
+    auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS
+    }
+})
 
 // ================= REGISTER =================
 app.post("/register", async (req, res) => {
@@ -85,7 +91,7 @@ app.post("/register", async (req, res) => {
     }
 })
 
-// ================= SEND OTP (RESEND) =================
+// ================= SEND OTP =================
 app.post("/send-otp", async (req, res) => {
     console.log("🔥 HIT /send-otp")
 
@@ -106,22 +112,24 @@ app.post("/send-otp", async (req, res) => {
         console.log("📩 EMAIL:", email)
         console.log("🔑 OTP:", otp)
 
-        // 🔥 GỬI EMAIL BẰNG RESEND
-        await resend.emails.send({
-            from: "onboarding@resend.dev", // dùng mặc định
+        // ⚠️ gửi async để không bị treo
+        transporter.sendMail({
+            from: `"OTP App" <${process.env.EMAIL_USER}>`,
             to: email,
-            subject: "OTP xác nhận đăng ký",
-            html: `<h2>Mã OTP của bạn là: ${otp}</h2>`
+            subject: "Mã OTP xác nhận",
+            text: `Mã OTP của bạn là: ${otp}`
         })
-
-        console.log("✅ EMAIL SENT SUCCESS")
+        .then(() => {
+            console.log("✅ EMAIL SENT SUCCESS")
+        })
+        .catch(err => {
+            console.log("❌ EMAIL ERROR:", err.message)
+        })
 
         res.json({ ok: true, message: "OTP đã gửi" })
 
     } catch (err) {
-        console.log("❌ RESEND ERROR FULL:", err)
-        console.log("❌ MESSAGE:", err.message)
-
+        console.log("❌ SEND OTP ERROR:", err)
         res.json({ ok: false, message: err.message })
     }
 })
@@ -132,30 +140,24 @@ app.post("/verify-otp", (req, res) => {
 
     const { email, otp } = req.body
 
-    console.log("📩 EMAIL:", email)
-    console.log("🔑 OTP INPUT:", otp)
-
     const data = otpStore[email]
 
     if (!data) {
-        console.log("❌ OTP NOT FOUND")
         return res.json({ ok: false, message: "OTP không tồn tại" })
     }
 
     if (Date.now() > data.expire) {
-        console.log("❌ OTP EXPIRED")
         delete otpStore[email]
         return res.json({ ok: false, message: "OTP hết hạn" })
     }
 
     if (data.otp !== otp) {
-        console.log("❌ OTP WRONG")
         return res.json({ ok: false, message: "OTP sai" })
     }
 
+    delete otpStore[email]
     console.log("✅ OTP VERIFIED")
 
-    delete otpStore[email]
     return res.json({ ok: true })
 })
 
