@@ -148,7 +148,38 @@ app.post("/change-password", async (req, res) => {
         res.json({ ok: false, message: err.message })
     }
 })
+// ================= UPDATE RESULT =================
+app.post("/update-result", async (req, res) => {
+    console.log("🔥 HIT /update-result")
 
+    try {
+        const { username, finalScore, level } = req.body
+
+        if (!username) {
+            return res.json({ ok: false, message: "Thiếu username" })
+        }
+
+        const user = await Account.findOne({ username })
+
+        if (!user) {
+            return res.json({ ok: false, message: "User không tồn tại" })
+        }
+
+        user.finalScore = finalScore
+        user.level = level
+        user.lastTestTime = new Date() // 🔥 QUAN TRỌNG
+
+        await user.save()
+
+        res.json({
+            ok: true,
+            message: "Cập nhật thành công"
+        })
+
+    } catch (err) {
+        res.json({ ok: false, message: err.message })
+    }
+})
 // ================= TEST =================
 app.get("/", (req, res) => {
     res.send("API RUNNING 🚀")

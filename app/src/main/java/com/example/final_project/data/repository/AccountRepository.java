@@ -11,26 +11,46 @@ import retrofit2.Call;
 
 public class AccountRepository {
 
-    private ApiService apiService;
+    private final ApiService apiService;
 
     public AccountRepository() {
-
         apiService = RetrofitClient
                 .getInstance()
                 .create(ApiService.class);
     }
 
+    // =========================
+    // REGISTER
+    // =========================
     public Call<ApiResponse> register(Account account) {
         return apiService.register(account);
     }
 
+    // =========================
+    // LOGIN
+    // =========================
     public Call<ApiResponse> login(Account account) {
         return apiService.login(account);
     }
-    public Call<ApiResponse> updateResult(Map<String, Object> body) {
-        return apiService.updateResult(body);
-    }
+
+    // =========================
+    // GET USER (🔥 load từ server)
+    // =========================
     public Call<ApiResponse> getUser(String username) {
         return apiService.getUser(username);
+    }
+
+    // =========================
+    // CHANGE PASSWORD
+    // =========================
+    public Call<ApiResponse> changePassword(Map<String, String> body) {
+        return apiService.changePassword(body);
+    }
+
+    // =========================
+    // UPDATE RESULT (🔥 quan trọng)
+    // =========================
+    public Call<ApiResponse> updateResult(Map<String, Object> body) {
+        return apiService.updateResult(body);
     }
 }

@@ -81,7 +81,7 @@ public class TrangChuActivity extends AppCompatActivity {
     }
 
     // =========================
-    // LOAD USER
+    // LOAD USER FROM SERVER
     // =========================
     private void loadUserFromServer() {
 
@@ -100,33 +100,10 @@ public class TrangChuActivity extends AppCompatActivity {
                         serverScore = user.getFinalScore();
                         serverLevel = user.getLevel();
                         lastTestTime = user.getLastTestTime();
-
-                        if (serverScore != null && serverLevel != null && lastTestTime != null) {
-
-                            String today = new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
-                                    .format(new Date());
-
-                            String serverDate = formatDate(lastTestTime);
-
-                            // ✅ Nếu cùng ngày → dùng server
-                            if (today.equals(serverDate)) {
-                                showServerResult();
-                            } else {
-                                // 🔥 khác ngày → tính lại
-                                calculateAndSaveLocalResult();
-                            }
-
-                        } else {
-                            calculateAndSaveLocalResult();
-                        }
-
-                    } else {
-                        calculateAndSaveLocalResult();
                     }
-
-                } else {
-                    calculateAndSaveLocalResult();
                 }
+
+                calculateAndSaveLocalResult();
             }
 
             @Override
@@ -137,21 +114,19 @@ public class TrangChuActivity extends AppCompatActivity {
     }
 
     // =========================
-    // FORMAT DATE (FIX MẠNH HƠN)
+    // FORMAT DATE
     // =========================
     private String formatDate(String raw) {
 
         if (raw == null) return "";
 
         try {
-            // case backend kiểu: 2026-04-27T10:20:30
             if (raw.contains("T")) {
-                String datePart = raw.split("T")[0]; // 2026-04-27
+                String datePart = raw.split("T")[0];
                 String[] parts = datePart.split("-");
                 return parts[2] + "/" + parts[1] + "/" + parts[0];
             }
 
-            // fallback (kiểu cũ)
             String[] parts = raw.split(" ");
             return parts[parts.length - 1];
 
@@ -161,34 +136,22 @@ public class TrangChuActivity extends AppCompatActivity {
     }
 
     // =========================
-    // HIỂN THỊ SERVER
+    // SHOW RESULT
     // =========================
-    private void showServerResult() {
+    private void showResult(int finalScore, String level, String date) {
 
-        String line1 = serverScore + " điểm - " + serverLevel;
-        String line2 = "";
-
-        if (lastTestTime != null) {
-            line2 = "Ngày test: " + formatDate(lastTestTime);
-        }
+        String line1 = finalScore + " điểm - " + level;
+        String line2 = "Ngày test: " + date;
 
         String fullText = line1 + "\n" + line2;
 
         SpannableString spannable = new SpannableString(fullText);
 
-        spannable.setSpan(
-                new AbsoluteSizeSpan(22, true),
-                0,
-                line1.length(),
-                Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
-        );
+        spannable.setSpan(new AbsoluteSizeSpan(22, true),
+                0, line1.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
 
-        spannable.setSpan(
-                new AbsoluteSizeSpan(14, true),
-                line1.length(),
-                fullText.length(),
-                Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
-        );
+        spannable.setSpan(new AbsoluteSizeSpan(14, true),
+                line1.length(), fullText.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
 
         txtFinalResult.setText(spannable);
         txtFinalResult.setTextColor(Color.WHITE);
@@ -196,7 +159,7 @@ public class TrangChuActivity extends AppCompatActivity {
     }
 
     // =========================
-    // LOCAL CALC
+    // CALCULATE + CHECK CHANGE
     // =========================
     private void calculateAndSaveLocalResult() {
 
@@ -223,36 +186,33 @@ public class TrangChuActivity extends AppCompatActivity {
         else if (finalScore <= 19) level = "Nặng vừa";
         else level = "Nặng";
 
-        String line1 = finalScore + " điểm - " + level;
-
         String today = new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
                 .format(new Date());
 
-        String line2 = "Ngày test: " + today;
+        boolean isChanged =
+                serverScore == null ||
+                        serverLevel == null ||
+                        finalScore != serverScore ||
+                        !level.equals(serverLevel);
 
-        String fullText = line1 + "\n" + line2;
+        if (isChanged) {
 
-        SpannableString spannable = new SpannableString(fullText);
+            // 🔥 UPDATE UI ngay
+            showResult(finalScore, level, today);
 
-        spannable.setSpan(
-                new AbsoluteSizeSpan(22, true),
-                0,
-                line1.length(),
-                Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
-        );
+            // 🔥 UPDATE SERVER
+            saveResultToServer(finalScore, level);
 
-        spannable.setSpan(
-                new AbsoluteSizeSpan(14, true),
-                line1.length(),
-                fullText.length(),
-                Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
-        );
+            // 🔥 QUAN TRỌNG: cập nhật lại local cache
+            serverScore = finalScore;
+            serverLevel = level;
+            lastTestTime = today;
 
-        txtFinalResult.setText(spannable);
-        txtFinalResult.setTextColor(Color.WHITE);
-        txtFinalResult.setTypeface(null, Typeface.BOLD);
-
-        saveResultToServer(finalScore, level);
+        } else {
+            // giữ nguyên thời gian server
+            String date = formatDate(lastTestTime);
+            showResult(serverScore, serverLevel, date);
+        }
     }
 
     // =========================
@@ -268,6 +228,7 @@ public class TrangChuActivity extends AppCompatActivity {
         repo.updateResult(body).enqueue(new Callback<ApiResponse>() {
             @Override
             public void onResponse(Call<ApiResponse> call, Response<ApiResponse> response) {}
+
             @Override
             public void onFailure(Call<ApiResponse> call, Throwable t) {}
         });
