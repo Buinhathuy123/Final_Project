@@ -100,9 +100,14 @@ public class TrangChuActivity extends AppCompatActivity {
                         serverScore = user.getFinalScore();
                         serverLevel = user.getLevel();
                         lastTestTime = user.getLastTestTime();
+
+                        // 👉 Hiển thị ngay dữ liệu từ server (đúng tuyệt đối)
+                        showResult(serverScore, serverLevel, formatDate(lastTestTime));
+                        return;
                     }
                 }
 
+                // fallback nếu lỗi
                 calculateAndSaveLocalResult();
             }
 
@@ -159,7 +164,7 @@ public class TrangChuActivity extends AppCompatActivity {
     }
 
     // =========================
-    // CALCULATE + CHECK CHANGE
+    // CALCULATE + ALWAYS UPDATE SERVER
     // =========================
     private void calculateAndSaveLocalResult() {
 
@@ -186,44 +191,26 @@ public class TrangChuActivity extends AppCompatActivity {
         else if (finalScore <= 19) level = "Nặng vừa";
         else level = "Nặng";
 
-        String today = new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
+        String nowISO = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.getDefault())
                 .format(new Date());
 
-        boolean isChanged =
-                serverScore == null ||
-                        serverLevel == null ||
-                        finalScore != serverScore ||
-                        !level.equals(serverLevel);
+        // 👉 luôn update UI theo thời điểm test
+        showResult(finalScore, level, formatDate(nowISO));
 
-        if (isChanged) {
-
-            // 🔥 UPDATE UI ngay
-            showResult(finalScore, level, today);
-
-            // 🔥 UPDATE SERVER
-            saveResultToServer(finalScore, level);
-
-            // 🔥 QUAN TRỌNG: cập nhật lại local cache
-            serverScore = finalScore;
-            serverLevel = level;
-            lastTestTime = today;
-
-        } else {
-            // giữ nguyên thời gian server
-            String date = formatDate(lastTestTime);
-            showResult(serverScore, serverLevel, date);
-        }
+        // 👉 luôn gửi server (quan trọng)
+        saveResultToServer(finalScore, level, nowISO);
     }
 
     // =========================
-    // UPDATE SERVER
+    // UPDATE SERVER (FIX CHUẨN)
     // =========================
-    private void saveResultToServer(int finalScore, String level) {
+    private void saveResultToServer(int finalScore, String level, String time) {
 
         Map<String, Object> body = new HashMap<>();
         body.put("username", username);
         body.put("finalScore", finalScore);
         body.put("level", level);
+        body.put("lastTestTime", time); // 🔥 gửi timestamp chuẩn
 
         repo.updateResult(body).enqueue(new Callback<ApiResponse>() {
             @Override

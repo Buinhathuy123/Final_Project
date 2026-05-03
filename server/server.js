@@ -153,7 +153,7 @@ app.post("/update-result", async (req, res) => {
     console.log("🔥 HIT /update-result")
 
     try {
-        const { username, finalScore, level } = req.body
+        const { username, finalScore, level, lastTestTime } = req.body
 
         if (!username) {
             return res.json({ ok: false, message: "Thiếu username" })
@@ -167,7 +167,14 @@ app.post("/update-result", async (req, res) => {
 
         user.finalScore = finalScore
         user.level = level
-        user.lastTestTime = new Date() // 🔥 QUAN TRỌNG
+
+        // ✅ Ưu tiên dùng time từ client
+        if (lastTestTime) {
+            user.lastTestTime = new Date(lastTestTime)
+        } else {
+            // fallback nếu client không gửi
+            user.lastTestTime = new Date()
+        }
 
         await user.save()
 
