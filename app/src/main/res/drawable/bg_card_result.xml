@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<shape xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Màu nền của khung (Xanh lá đậm) -->
+    <solid android:color="#22A06B" />
+
+    <!-- Độ bo góc (Bạn có thể chỉnh con số này để góc tròn nhiều hay ít) -->
+    <corners android:radius="16dp" />
+</shape>

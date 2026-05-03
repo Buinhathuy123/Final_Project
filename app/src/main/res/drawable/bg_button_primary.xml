@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ripple xmlns:android="http://schemas.android.com/apk/res/android"
+    android:color="#40FFFFFF"> <!-- Màu của hiệu ứng loang khi bấm -->
+
+    <item>
+        <shape android:shape="rectangle">
+            <!-- Màu nền nút (Xanh đen đậm để sang trọng) -->
+            <solid android:color="#2E3148" />
+
+            <!-- Bo góc lớn (16dp) cho đúng chuẩn hiện đại -->
+            <corners android:radius="16dp" />
+        </shape>
+    </item>
+</ripple>

@@ -1,136 +1,199 @@
-<LinearLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
-    android:background="#F4F6F8"
-    android:orientation="vertical"
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="#F4F6F8"
+    android:orientation="vertical"
     android:padding="24dp">
 
+    <!-- Header: Avatar và Nút Lịch sử -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal"
+        android:layout_marginBottom="20dp"
         android:gravity="center_vertical"
-        android:layout_marginBottom="20dp">
+        android:orientation="horizontal">
+
         <ImageView
             android:id="@+id/imgAvatar"
             android:layout_width="48dp"
             android:layout_height="48dp"
-            android:src="@drawable/avatar"/>
-        <View android:layout_width="0dp" android:layout_weight="1" android:layout_height="1dp"/>
+            android:contentDescription="User Avatar"
+            android:src="@drawable/avatar" />
+
+        <View
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:layout_weight="1" />
+
+        <ImageView
+            android:id="@+id/btnHistory"
+            android:layout_width="44dp"
+            android:layout_height="44dp"
+            android:background="@drawable/bg_icon_circle"
+            android:clickable="true"
+            android:contentDescription="History"
+            android:focusable="true"
+            android:padding="10dp"
+            android:src="@drawable/history"
+            android:elevation="2dp"
+            app:tint="#2E3148" />
     </LinearLayout>
 
+    <!-- Lời chào -->
     <TextView
         android:id="@+id/txtHello"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
         android:text="Chào, User!"
         android:textColor="#2E3148"
         android:textSize="32sp"
-        android:textStyle="bold"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"/>
+        android:textStyle="bold" />
 
     <TextView
-        android:text="Hôm nay bạn cảm thấy thế nào?"
-        android:textColor="#7B8194"
-        android:textSize="20sp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
         android:layout_marginBottom="30dp"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"/>
+        android:text="Hôm nay bạn cảm thấy thế nào?"
+        android:textColor="#7B8194"
+        android:textSize="20sp" />
 
+    <!-- Card kết quả tổng hợp -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:background="@drawable/bg_card_result"
+        android:backgroundTint="#22A06B"
         android:minHeight="140dp"
-        android:background="#22A06B"
+        android:orientation="vertical"
         android:padding="20dp"
-        android:layout_marginBottom="20dp"
-        android:orientation="vertical">
+        android:layout_marginBottom="25dp"
+        android:elevation="4dp">
 
         <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
             android:text="Mức độ trầm cảm gần nhất:"
             android:textColor="#FFFFFF"
-            android:textSize="16sp"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"/>
+            android:textSize="16sp" />
 
         <TextView
             android:id="@+id/txtFinalResult"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
             android:text="Chưa có dữ liệu"
             android:textColor="#FFFFFF"
             android:textSize="24sp"
-            android:textStyle="bold"
-            android:layout_marginTop="8dp"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"/>
+            android:textStyle="bold" />
 
+        <!-- Lời khuyên (Mới thêm) -->
+        <TextView
+            android:id="@+id/txtAdvice"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:textColor="#FFFFFF"
+            android:textSize="14sp"
+            android:lineSpacingExtra="4dp"
+            android:visibility="gone" />
+
+        <!-- Đề xuất âm nhạc -->
+        <TextView
+            android:id="@+id/txtMusicSuggest"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:text="🎵 Gợi ý âm nhạc dành cho bạn"
+            android:textColor="#FFEB3B"
+            android:textSize="14sp"
+            android:textStyle="italic|bold"
+            android:clickable="true"
+            android:focusable="true"
+            android:visibility="gone" />
+
+        <!-- Gợi ý thông minh -->
         <TextView
             android:id="@+id/txtStatusNote"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="12dp"
-            android:text="..."
             android:textColor="#FFFFFF"
             android:textSize="13sp"
             android:textStyle="italic"
-            android:visibility="gone"/>
+            android:visibility="gone" />
     </LinearLayout>
 
     <TextView
-        android:text="Chọn phương thức:"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="16dp"
+        android:text="Chọn phương thức đánh giá:"
         android:textColor="#2E3148"
         android:textSize="20sp"
-        android:textStyle="bold"
-        android:layout_marginBottom="12dp"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"/>
+        android:textStyle="bold" />
 
+    <!-- Khu vực các nút bấm phương thức -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal"
         android:gravity="center"
-        android:layout_marginTop="20dp">
+        android:orientation="horizontal">
 
         <LinearLayout
             android:layout_width="0dp"
+            android:layout_height="wrap_content"
             android:layout_weight="1"
             android:gravity="center"
-            android:orientation="vertical"
-            android:layout_height="wrap_content">
+            android:orientation="vertical">
+
             <ImageView
                 android:id="@+id/btn_hinhanh"
-                android:layout_width="48dp"
-                android:layout_height="48dp"
-                android:src="@drawable/image"/>
+                android:layout_width="64dp"
+                android:layout_height="64dp"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:clickable="true"
+                android:focusable="true"
+                android:padding="12dp"
+                android:src="@drawable/image" />
+
             <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
                 android:text="Hình ảnh"
                 android:textColor="#2E3148"
                 android:textSize="15sp"
-                android:layout_marginTop="6dp"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"/>
+                android:fontFamily="sans-serif-medium" />
         </LinearLayout>
 
         <LinearLayout
             android:layout_width="0dp"
+            android:layout_height="wrap_content"
             android:layout_weight="1"
             android:gravity="center"
-            android:orientation="vertical"
-            android:layout_height="wrap_content">
+            android:orientation="vertical">
+
             <ImageView
                 android:id="@+id/btn_tracnghiem"
-                android:layout_width="48dp"
-                android:layout_height="48dp"
-                android:src="@drawable/text"/>
+                android:layout_width="64dp"
+                android:layout_height="64dp"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:clickable="true"
+                android:focusable="true"
+                android:padding="12dp"
+                android:src="@drawable/text" />
+
             <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
                 android:text="Trắc nghiệm"
                 android:textColor="#2E3148"
                 android:textSize="15sp"
-                android:layout_marginTop="6dp"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"/>
+                android:fontFamily="sans-serif-medium" />
         </LinearLayout>
-
     </LinearLayout>
 </LinearLayout>

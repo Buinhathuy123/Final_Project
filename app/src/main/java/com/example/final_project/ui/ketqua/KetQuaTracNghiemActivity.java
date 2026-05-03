@@ -1,24 +1,21 @@
 package com.example.final_project.ui.ketqua;
 
 import android.content.Intent;
-import android.net.Uri;
 import android.os.Bundle;
-import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.AppCompatButton;
 
 import com.example.final_project.R;
-import com.example.final_project.ui.trangchu.TrangChuActivity;
-
 import com.example.final_project.ui.ghiam.BatDauGhiAmActivity;
-import android.widget.Toast;
+import com.example.final_project.util.DataManager;
 
 public class KetQuaTracNghiemActivity extends AppCompatActivity {
 
-    private TextView txtKetQua, txtLoiKhuyen, txtGoiYAmNhac;
-    private LinearLayout btnKetThuc;
-
+    private TextView txtKetQua;
+    private AppCompatButton btnKetThuc; // Đã đổi từ LinearLayout thành AppCompatButton
     private int score = 0;
 
     @Override
@@ -26,79 +23,45 @@ public class KetQuaTracNghiemActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_ketqua_tracnghiem);
 
+        // Ánh xạ View
         txtKetQua = findViewById(R.id.textketquatracnghiem);
-        txtLoiKhuyen = findViewById(R.id.textloikhuyentracnghiem);
-        txtGoiYAmNhac = findViewById(R.id.textgoiyamnhac);
         btnKetThuc = findViewById(R.id.btnketthuctracnghiem);
 
+        // Nhận điểm số từ Intent
         score = getIntent().getIntExtra("score", 0);
-        com.example.final_project.util.DataManager.saveQuizScore(this, score);
+
+        // Lưu điểm vào DataManager để trang Lịch sử có thể sử dụng
+        DataManager.saveQuizScore(this, score);
+
+        // Hiển thị kết quả văn bản
         showResult(score);
 
-        // Finish button
-        btnKetThuc.setOnClickListener(v -> {
-            Toast.makeText(this, "Chuyển sang kiểm tra giọng nói...", Toast.LENGTH_SHORT).show();
+        // Xử lý sự kiện nút Tiếp tục
+        if (btnKetThuc != null) {
+            btnKetThuc.setOnClickListener(v -> {
+                Toast.makeText(this, "Chuyển sang kiểm tra giọng nói...", Toast.LENGTH_SHORT).show();
 
-            Intent intent = new Intent(KetQuaTracNghiemActivity.this, BatDauGhiAmActivity.class);
-            startActivity(intent);
+                // Chuyển sang phần test tiếp theo là Ghi âm
+                Intent intent = new Intent(KetQuaTracNghiemActivity.this, BatDauGhiAmActivity.class);
+                startActivity(intent);
 
-            finish();
-        });
-
-        // Open music suggestion
-        txtGoiYAmNhac.setOnClickListener(v -> {
-            String url = getMusicLinkByScore(score);
-
-            Intent intent = new Intent(Intent.ACTION_VIEW);
-            intent.setData(Uri.parse(url));
-            startActivity(intent);
-        });
+                // Kết thúc Activity hiện tại để không quay lại được bằng nút Back
+                finish();
+            });
+        }
     }
 
     private void showResult(int score) {
-
         String level;
-        String advice;
-
         if (score <= 4) {
-
             level = "Trầm cảm tối thiểu";
-            advice = "Sức khỏe tinh thần của bạn đang khá ổn định. Hãy tiếp tục duy trì lối sống lành mạnh và giữ kết nối với những người xung quanh.";
-
         } else if (score <= 9) {
-
             level = "Trầm cảm nhẹ";
-            advice = "Bạn có thể đang trải qua một chút tâm trạng buồn. Hãy thử thư giãn, tập thể dục hoặc chia sẻ với bạn bè và gia đình.";
-
         } else if (score <= 14) {
-
             level = "Trầm cảm trung bình";
-            advice = "Bạn nên cân nhắc trao đổi với chuyên gia tâm lý để nhận được sự tư vấn và hỗ trợ.";
-
         } else {
-
             level = "Trầm cảm nặng";
-            advice = "Bạn nên tìm kiếm sự hỗ trợ từ bác sĩ hoặc chuyên gia sức khỏe tâm thần càng sớm càng tốt.";
-
         }
-
         txtKetQua.setText(level);
-        txtLoiKhuyen.setText(advice);
-    }
-
-    private String getMusicLinkByScore(int score) {
-
-        if (score <= 4) {
-            return "https://open.spotify.com/playlist/2WLjVJrYUMcNWf8jKRzBpb";
-        }
-        else if (score <= 9) {
-            return "https://open.spotify.com/album/11nFCEpoPyEvcb1ihgiKkK";
-        }
-        else if (score <= 14) {
-            return "https://open.spotify.com/playlist/37i9dQZF1DX3Ogo9pFvBkY";
-        }
-        else {
-            return "https://open.spotify.com/album/5eUCj0ztGDmYXY417P7TGS";
-        }
     }
 }

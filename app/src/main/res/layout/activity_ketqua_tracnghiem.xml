@@ -1,151 +1,110 @@
-<LinearLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:background="#F6F8FB"
-    android:orientation="vertical"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:background="#F8FAFC"
+    android:orientation="vertical">
 
     <ScrollView
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        android:layout_height="match_parent"
+        android:fillViewport="true"
+        android:scrollbars="none">
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:padding="20dp">
+            android:padding="24dp">
 
-            <!-- HEADER -->
-            <LinearLayout
+            <RelativeLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:layout_marginBottom="20dp">
-
-                <ImageView
-                    android:layout_width="42dp"
-                    android:layout_height="42dp"
-                    android:src="@drawable/avatar"
-                    android:scaleType="centerCrop"/>
-
-                <View
-                    android:layout_width="0dp"
-                    android:layout_height="0dp"
-                    android:layout_weight="1"/>
-
-                <ImageView
-                    android:layout_width="42dp"
-                    android:layout_height="42dp"
-                    android:src="@drawable/chuong"
-                    android:scaleType="centerCrop"/>
-
-            </LinearLayout>
-
-            <!-- TITLE -->
-            <TextView
-                android:text="Bài kiểm tra trầm cảm PHQ-9"
-                android:textSize="22sp"
-                android:textStyle="bold"
-                android:textColor="#333333"
-                android:layout_marginBottom="6dp"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"/>
-
-            <TextView
-                android:text="Kết quả đánh giá của bạn"
-                android:textSize="16sp"
-                android:textColor="#777777"
-                android:layout_marginBottom="25dp"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"/>
-
-            <!-- PROGRESS -->
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="6dp"
-                android:background="#E0E0E0"
-                android:layout_marginBottom="25dp">
-
-                <View
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:background="#7FA7FA"/>
-            </LinearLayout>
-
-            <TextView
-                android:text="Câu hỏi 9 / 9"
-                android:textSize="14sp"
-                android:textColor="#777777"
-                android:layout_marginBottom="20dp"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"/>
-
-            <!-- RESULT CARD -->
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:padding="20dp"
-                android:background="@drawable/result_card"
-                android:layout_marginBottom="30dp">
+                android:layout_marginBottom="32dp">
 
                 <TextView
-                    android:id="@+id/textketquatracnghiem"
-                    android:text="Trầm cảm mức độ trung bình"
-                    android:textSize="24sp"
-                    android:textStyle="bold"
-                    android:textColor="#333333"
-                    android:layout_marginBottom="10dp"
                     android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"/>
+                    android:layout_height="wrap_content"
+                    android:layout_centerInParent="true"
+                    android:text="Kết quả trắc nghiệm"
+                    android:textColor="#1E293B"
+                    android:textSize="18sp"
+                    android:textStyle="bold" />
+            </RelativeLayout>
 
-                <TextView
-                    android:id="@+id/textloikhuyentracnghiem"
-                    android:text="Bạn nên cân nhắc trao đổi với bác sĩ hoặc chuyên gia sức khỏe tâm lý."
-                    android:textSize="16sp"
-                    android:textColor="#555555"
-                    android:layout_marginBottom="10dp"
+            <androidx.cardview.widget.CardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="32dp"
+                app:cardCornerRadius="24dp"
+                app:cardElevation="4dp">
+
+                <LinearLayout
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content"/>
+                    android:layout_height="wrap_content"
+                    android:gravity="center"
+                    android:orientation="vertical"
+                    android:padding="32dp">
 
-            </LinearLayout>
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:letterSpacing="0.1"
+                        android:text="Mức độ trầm cảm (PHQ-9)"
+                        android:textColor="#64748B"
+                        android:textSize="13sp"
+                        android:textStyle="bold"
+                        android:textAllCaps="true" />
 
-            <!-- MUSIC SUGGESTION -->
+                    <TextView
+                        android:id="@+id/textketquatracnghiem"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="16dp"
+                        android:gravity="center"
+                        android:text="Đang tính toán..."
+                        android:textColor="#0F172A"
+                        android:textSize="22sp"
+                        android:textStyle="bold" />
+
+                    <View
+                        android:layout_width="50dp"
+                        android:layout_height="4dp"
+                        android:layout_marginTop="20dp"
+                        android:background="#22A06B"
+                        android:alpha="0.7"/>
+                </LinearLayout>
+            </androidx.cardview.widget.CardView>
+
             <TextView
-                android:id="@+id/textgoiyamnhac"
-                android:text="Xem gợi ý âm nhạc dành cho bạn"
-                android:textSize="16sp"
-                android:textColor="#7FA7FA"
-                android:textStyle="bold"
-                android:layout_gravity="center"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
                 android:layout_marginBottom="40dp"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"/>
+                android:gravity="center"
+                android:paddingHorizontal="20dp"
+                android:text="Kết quả này sẽ được tổng hợp cùng các bài kiểm tra khác tại trang chủ."
+                android:textColor="#94A3B8"
+                android:textSize="14sp"
+                android:lineSpacingExtra="4dp" />
 
-            <!-- FINISH BUTTON -->
-            <LinearLayout
+            <!-- Space lấp đầy khoảng trống để đẩy nút xuống dưới cùng -->
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1" />
+
+            <androidx.appcompat.widget.AppCompatButton
                 android:id="@+id/btnketthuctracnghiem"
                 android:layout_width="match_parent"
-                android:layout_height="55dp"
-                android:gravity="center"
-                android:background="@drawable/button_start"
-                android:clickable="true"
-                android:focusable="true">
-
-                <TextView
-                    android:text="Tiếp tục"
-                    android:textColor="#FFFFFF"
-                    android:textSize="18sp"
-                    android:textStyle="bold"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"/>
-
-            </LinearLayout>
+                android:layout_height="56dp"
+                android:background="@drawable/bg_button_primary"
+                android:text="Tiếp tục"
+                android:textAllCaps="false"
+                android:textColor="#FFFFFF"
+                android:textSize="16sp"
+                android:textStyle="bold" />
 
         </LinearLayout>
-
     </ScrollView>
-
 </LinearLayout>
