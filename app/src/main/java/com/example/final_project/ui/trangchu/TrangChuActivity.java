@@ -239,6 +239,11 @@ public class TrangChuActivity extends AppCompatActivity {
         body.put("finalScore", finalScore);
         body.put("level", level);
 
+        // 🔥 THÊM 3 DÒNG NÀY
+        body.put("quizScore", DataManager.getQuizScore(this));
+        body.put("voiceResult", DataManager.getVoiceResult(this));
+        body.put("faceResult", DataManager.getFaceResult(this));
+
         SimpleDateFormat iso =
                 new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.getDefault());
         iso.setTimeZone(TimeZone.getTimeZone("UTC"));

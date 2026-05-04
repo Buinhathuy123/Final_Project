@@ -53,12 +53,7 @@
                     android:layout_height="1dp"
                     android:layout_weight="1" />
 
-                <ImageView
-                    android:id="@+id/rh19i4lvbk95"
-                    android:layout_width="40dp"
-                    android:layout_height="40dp"
-                    android:src="@drawable/chuong"
-                    android:scaleType="fitXY" />
+
             </LinearLayout>
 
             <!-- BACK + MENU -->
