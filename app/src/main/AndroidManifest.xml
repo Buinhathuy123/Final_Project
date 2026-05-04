@@ -18,8 +18,6 @@
     <uses-permission android:name="android.permission.CAMERA" />
     <uses-feature android:name="android.hardware.camera" android:required="false" />
 
-
-
     <application
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
@@ -41,39 +39,22 @@
             </intent-filter>
         </activity>
 
+        <!-- MODULE TRANG CHỦ & LỊCH SỬ -->
         <activity
-            android:name=".ui.ketqua.KetQuaTracNghiemActivity"
+            android:name=".ui.trangchu.TrangChuActivity"
             android:exported="false" />
 
         <activity
-            android:name=".ui.tracnghiem.ChonTracNghiemActivity"
+            android:name=".ui.lichsu.LichSuActivity"
             android:exported="false" />
 
+        <!-- CỐ ĐỊNH LỖI CRASH: Đã thêm Activity Chi tiết lịch sử tại đây -->
         <activity
-            android:name=".ui.tracnghiem.BatDauTracNghiemActivity"
-            android:exported="false" />
+            android:name=".ui.lichsu.ChiTietLichSuActivity"
+            android:exported="false"
+            android:screenOrientation="portrait" />
 
-        <activity
-            android:name=".ui.ghiam.BatDauGhiAmActivity"
-            android:exported="false" />
-
-        <activity
-            android:name=".ui.ghiam.TrangDauTienGhiAmActivity"
-            android:exported="false" />
-        <activity
-            android:name=".ui.ghiam.KetQuaGhiAmActivity"
-            android:exported="false" />
-        <activity
-            android:name=".ui.ghiam.ChoKetQuaGhiAmActivity"
-            android:exported="false" />
-
-        <activity
-            android:name=".ui.hinhanh.BatDauHinhAnhActivity"
-            android:exported="false" />
-
-        <activity
-            android:name=".ui.hinhanh.ChonHinhHinhAnhActivity"
-            android:exported="false" />
+        <!-- MODULE ĐĂNG NHẬP / HỆ THỐNG -->
         <activity
             android:name=".ui.dangnhap.DangKyActivity"
             android:exported="false" />
@@ -84,17 +65,44 @@
             android:name=".ui.dangnhap.DangNhapActivity"
             android:exported="false" />
         <activity
-            android:name=".ui.trangchu.TrangChuActivity"
+            android:name=".ui.dangnhap.QuenMatKhauActivity"
+            android:exported="false" />
+
+        <!-- MODULE TRẮC NGHIỆM -->
+        <activity
+            android:name=".ui.tracnghiem.ChonTracNghiemActivity"
             android:exported="false" />
         <activity
-            android:name=".ui.dangnhap.QuenMatKhauActivity"
+            android:name=".ui.tracnghiem.BatDauTracNghiemActivity"
+            android:exported="false" />
+        <activity
+            android:name=".ui.ketqua.KetQuaTracNghiemActivity"
+            android:exported="false" />
+
+        <!-- MODULE GHI ÂM (GIỌNG NÓI) -->
+        <activity
+            android:name=".ui.ghiam.BatDauGhiAmActivity"
             android:exported="false" />
         <activity
             android:name=".ui.ghiam.TrangGhiAmActivity"
             android:exported="false" />
-        <activity android:name=".ui.hinhanh.KetQuaHinhAnhActivity" />
+        <activity
+            android:name=".ui.ghiam.ChoKetQuaGhiAmActivity"
+            android:exported="false" />
+        <activity
+            android:name=".ui.ghiam.KetQuaGhiAmActivity"
+            android:exported="false" />
 
-
+        <!-- MODULE HÌNH ẢNH (KHUÔN MẶT) -->
+        <activity
+            android:name=".ui.hinhanh.BatDauHinhAnhActivity"
+            android:exported="false" />
+        <activity
+            android:name=".ui.hinhanh.ChonHinhHinhAnhActivity"
+            android:exported="false" />
+        <activity
+            android:name=".ui.hinhanh.KetQuaHinhAnhActivity"
+            android:exported="false" />
 
     </application>
 
