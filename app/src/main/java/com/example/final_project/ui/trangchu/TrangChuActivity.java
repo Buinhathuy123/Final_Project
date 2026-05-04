@@ -16,6 +16,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import com.example.final_project.R;
 import com.example.final_project.ui.tracnghiem.BatDauTracNghiemActivity;
 import com.example.final_project.ui.hinhanh.BatDauHinhAnhActivity;
+import com.example.final_project.ui.lichsu.LichSuActivity;
 import com.example.final_project.util.DataManager;
 
 import com.example.final_project.data.repository.AccountRepository;
@@ -27,6 +28,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
+import java.util.TimeZone;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -34,7 +36,7 @@ import retrofit2.Response;
 
 public class TrangChuActivity extends AppCompatActivity {
 
-    private ImageView btnTracNghiem, btnHinhAnh, imgAvatar;
+    private ImageView btnTracNghiem, btnHinhAnh, imgAvatar, btnHistory;
     private TextView txtHello, txtFinalResult;
 
     private String username;
@@ -62,6 +64,7 @@ public class TrangChuActivity extends AppCompatActivity {
 
         setupNavigation();
         setupAvatarMenu();
+        setupHistoryButton();
 
         loadUserFromServer();
     }
@@ -72,6 +75,7 @@ public class TrangChuActivity extends AppCompatActivity {
         txtHello = findViewById(R.id.txtHello);
         txtFinalResult = findViewById(R.id.txtFinalResult);
         imgAvatar = findViewById(R.id.imgAvatar);
+        btnHistory = findViewById(R.id.btnHistory);
     }
 
     @Override
@@ -114,18 +118,33 @@ public class TrangChuActivity extends AppCompatActivity {
     }
 
     // =========================
-    // FORMAT DATE
+    // FORMAT DATE (FIX CHUẨN)
     // =========================
     private String formatDate(String raw) {
 
-        if (raw == null) return "";
+        if (raw == null || raw.isEmpty()) return "--/--/----";
 
         try {
-            Date date = new Date(raw);
-            SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault());
-            return sdf.format(date);
+            Date date;
+
+            if (raw.contains("T")) {
+                SimpleDateFormat iso =
+                        new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSX", Locale.getDefault());
+                date = iso.parse(raw);
+            } else {
+                SimpleDateFormat old =
+                        new SimpleDateFormat("EEE MMM dd HH:mm:ss zzz yyyy", Locale.ENGLISH);
+                date = old.parse(raw);
+            }
+
+            SimpleDateFormat output =
+                    new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault());
+
+            return output.format(date);
+
         } catch (Exception e) {
-            return raw;
+            e.printStackTrace();
+            return raw; // 🔥 fallback
         }
     }
 
@@ -153,27 +172,26 @@ public class TrangChuActivity extends AppCompatActivity {
     }
 
     // =========================
-    // MAIN LOGIC (🔥 FIX CHUẨN)
+    // MAIN LOGIC
     // =========================
     private void calculateAndSync() {
+
+        // ưu tiên server
+        if (serverScore != null && serverLevel != null) {
+            showResult(serverScore, serverLevel, formatDate(lastTestTime));
+        }
 
         boolean completedAll = DataManager.isQuizCompleted(this) &&
                 DataManager.isVoiceCompleted(this) &&
                 DataManager.isFaceCompleted(this);
 
-        // ❗ CHƯA TEST → SHOW SERVER
         if (!completedAll) {
-
-            if (serverScore != null && serverLevel != null && lastTestTime != null) {
-                showResult(serverScore, serverLevel, formatDate(lastTestTime));
-            } else {
+            if (serverScore == null) {
                 txtFinalResult.setText("Chưa có kết quả test");
             }
-
             return;
         }
 
-        // ================= CALCULATE =================
         double sQuiz = DataManager.getQuizScore(this) / 24.0;
         double sVoice = (DataManager.getVoiceResult(this) == 1) ? 1.0 : 0.0;
         double sFace = DataManager.getFaceResult(this) ? 1.0 : 0.0;
@@ -197,7 +215,7 @@ public class TrangChuActivity extends AppCompatActivity {
                         serverLevel == null ||
                         finalScore != serverScore ||
                         !level.equals(serverLevel) ||
-                        !today.equals(serverDate); // 🔥 FIX NGÀY
+                        !today.equals(serverDate);
 
         if (isChanged) {
 
@@ -207,11 +225,7 @@ public class TrangChuActivity extends AppCompatActivity {
 
             serverScore = finalScore;
             serverLevel = level;
-            lastTestTime = new Date().toString();
-
-        } else {
-
-            showResult(serverScore, serverLevel, serverDate);
+            lastTestTime = today;
         }
     }
 
@@ -224,7 +238,12 @@ public class TrangChuActivity extends AppCompatActivity {
         body.put("username", username);
         body.put("finalScore", finalScore);
         body.put("level", level);
-        body.put("lastTestTime", new Date().toString());
+
+        SimpleDateFormat iso =
+                new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.getDefault());
+        iso.setTimeZone(TimeZone.getTimeZone("UTC"));
+
+        body.put("lastTestTime", iso.format(new Date()));
 
         repo.updateResult(body).enqueue(new Callback<ApiResponse>() {
             @Override public void onResponse(Call<ApiResponse> call, Response<ApiResponse> response) {}
@@ -232,6 +251,9 @@ public class TrangChuActivity extends AppCompatActivity {
         });
     }
 
+    // =========================
+    // NAVIGATION
+    // =========================
     private void setupNavigation() {
 
         btnTracNghiem.setOnClickListener(v -> {
@@ -247,11 +269,25 @@ public class TrangChuActivity extends AppCompatActivity {
         });
     }
 
+    // =========================
+    // HISTORY
+    // =========================
+    private void setupHistoryButton() {
+        btnHistory.setOnClickListener(v -> {
+            Intent i = new Intent(this, LichSuActivity.class);
+            i.putExtra("username", username);
+            startActivity(i);
+        });
+    }
+
+    // =========================
+    // AVATAR MENU
+    // =========================
     private void setupAvatarMenu() {
 
         imgAvatar.setOnClickListener(v -> {
 
-            PopupMenu menu = new PopupMenu(this, imgAvatar, 0, 0, R.style.PopupMenuStyle);
+            PopupMenu menu = new PopupMenu(this, imgAvatar);
             menu.getMenuInflater().inflate(R.menu.menu_avatar, menu.getMenu());
 
             menu.setOnMenuItemClickListener(item -> {

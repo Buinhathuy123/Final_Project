@@ -11,7 +11,6 @@ const app = express()
 app.use(express.json())
 app.use(cors())
 
-// LOG REQUEST
 app.use((req, res, next) => {
     console.log("===================================")
     console.log("📌 METHOD:", req.method)
@@ -27,13 +26,32 @@ mongoose.connect(process.env.MONGO_URI)
 .catch(err => console.log("❌ Mongo Error:", err))
 
 // ================= SCHEMA =================
+const HistorySchema = new mongoose.Schema({
+    score: Number,
+    level: String,
+    date: Date,
+
+    // 🔥 FIX: thêm chi tiết
+    quizScore: Number,
+    voiceResult: Number,
+    faceResult: Boolean
+
+}, { _id: false })
+
 const AccountSchema = new mongoose.Schema({
     username: { type: String, required: true, unique: true },
     password: { type: String, required: true },
     email: String,
+
     finalScore: { type: Number, default: null },
     level: { type: String, default: null },
-    lastTestTime: { type: Date, default: null } // 🔥 FIX: dùng Date
+    lastTestTime: { type: Date, default: null },
+
+    // 🔥 history list
+    history: {
+        type: [HistorySchema],
+        default: []
+    }
 })
 
 const Account = mongoose.model("accounts", AccountSchema)
@@ -58,7 +76,8 @@ app.post("/register", async (req, res) => {
         const user = new Account({
             username,
             password: hashed,
-            email
+            email,
+            history: []
         })
 
         await user.save()
@@ -100,7 +119,7 @@ app.post("/login", async (req, res) => {
 })
 
 
-// ================= GET USER (🔥 QUAN TRỌNG) =================
+// ================= GET USER =================
 app.get("/get-user/:username", async (req, res) => {
     try {
         const { username } = req.params
@@ -125,7 +144,15 @@ app.get("/get-user/:username", async (req, res) => {
 // ================= UPDATE RESULT =================
 app.post("/update-result", async (req, res) => {
     try {
-        const { username, finalScore, level, lastTestTime } = req.body
+        const {
+            username,
+            finalScore,
+            level,
+            lastTestTime,
+            quizScore,
+            voiceResult,
+            faceResult
+        } = req.body
 
         if (!username) {
             return res.json({ ok: false, message: "Thiếu username" })
@@ -137,44 +164,35 @@ app.post("/update-result", async (req, res) => {
             return res.json({ ok: false, message: "User không tồn tại" })
         }
 
-        // 🔥 LOGIC UPDATE CHUẨN
-        let shouldUpdate = false
+        const date = lastTestTime
+            ? new Date(lastTestTime)
+            : new Date()
 
-        // lần đầu chưa có
-        if (user.finalScore == null || user.level == null) {
-            shouldUpdate = true
+        // 🔥 PUSH HISTORY (mới nhất lên đầu)
+        user.history.unshift({
+            score: finalScore,
+            level: level,
+            date: date,
+            quizScore: quizScore || 0,
+            voiceResult: voiceResult || 0,
+            faceResult: faceResult || false
+        })
+
+        // 🔥 LIMIT 20 record (tránh phình DB)
+        if (user.history.length > 20) {
+            user.history = user.history.slice(0, 20)
         }
 
-        // khác điểm hoặc khác level
-        if (user.finalScore !== finalScore || user.level !== level) {
-            shouldUpdate = true
-        }
+        // 🔥 update latest
+        user.finalScore = finalScore
+        user.level = level
+        user.lastTestTime = date
 
-        // cùng điểm nhưng khác ngày
-        if (lastTestTime) {
-            const newDate = new Date(lastTestTime)
-            const oldDate = user.lastTestTime
-
-            if (!oldDate ||
-                newDate.toDateString() !== new Date(oldDate).toDateString()) {
-                shouldUpdate = true
-            }
-        }
-
-        if (shouldUpdate) {
-            user.finalScore = finalScore
-            user.level = level
-            user.lastTestTime = lastTestTime
-                ? new Date(lastTestTime)
-                : new Date()
-
-            await user.save()
-        }
+        await user.save()
 
         res.json({
             ok: true,
-            message: "Update processed",
-            updated: shouldUpdate
+            message: "Saved to history"
         })
 
     } catch (err) {

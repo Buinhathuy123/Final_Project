@@ -3,109 +3,84 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#F4F6F8"
-    android:orientation="vertical"
-    android:padding="24dp">
+    android:background="#F6F8FB"
+    android:orientation="vertical">
 
-    <!-- Header tối giản -->
+    <!-- HEADER -->
     <FrameLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginBottom="20dp">
+        android:layout_height="72dp"
+        android:paddingHorizontal="20dp"
+        android:paddingTop="16dp">
 
+        <!-- Back -->
         <ImageView
             android:id="@+id/btnBack"
-            android:layout_width="36dp"
-            android:layout_height="36dp"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:layout_gravity="start|center_vertical"
             android:background="@drawable/bg_icon_circle"
-            android:clickable="true"
-            android:focusable="true"
-            android:padding="8dp"
+            android:padding="10dp"
             android:src="@drawable/outline_arrow_back_24"
             app:tint="#2E3148" />
 
+        <!-- Title -->
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center"
             android:text="Lịch sử"
-            android:textColor="#2E3148"
-            android:textSize="18sp"
+            android:textColor="#1F2937"
+            android:textSize="20sp"
             android:textStyle="bold" />
+
     </FrameLayout>
 
-    <!-- Card kết quả gọn gàng -->
-    <androidx.cardview.widget.CardView
-        android:id="@+id/cardResult"
+    <!-- DIVIDER NHẸ -->
+    <View
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        app:cardCornerRadius="12dp"
-        app:cardElevation="2dp">
+        android:layout_height="1dp"
+        android:background="#E5E7EB" />
 
-        <RelativeLayout
+    <!-- CONTENT -->
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <!-- LIST -->
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/recyclerViewHistory"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:padding="16dp">
+            android:layout_height="match_parent"
+            android:padding="16dp"
+            android:clipToPadding="false" />
 
-            <!-- Điểm số nổi bật bên trái -->
+        <!-- EMPTY STATE -->
+        <LinearLayout
+            android:id="@+id/layoutEmpty"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:gravity="center"
+            android:orientation="vertical"
+            android:visibility="gone">
+
+            <ImageView
+                android:layout_width="80dp"
+                android:layout_height="80dp"
+                android:src="@drawable/history"
+                app:tint="#D1D5DB" />
+
             <TextView
-                android:id="@+id/txtHistoryScore"
+                android:id="@+id/txtNoData"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="--"
-                android:textColor="#22A06B"
-                android:textSize="32sp"
-                android:textStyle="bold" />
-
-            <TextView
-                android:id="@+id/unitScore"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_toEndOf="@id/txtHistoryScore"
-                android:layout_alignBaseline="@id/txtHistoryScore"
-                android:layout_marginStart="4dp"
-                android:text="/24"
-                android:textColor="#7B8194"
+                android:layout_marginTop="12dp"
+                android:text="Chưa có lịch sử"
+                android:textColor="#9CA3AF"
                 android:textSize="14sp" />
 
-            <!-- Mức độ nằm bên phải điểm -->
-            <TextView
-                android:id="@+id/txtHistoryLevel"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_alignParentEnd="true"
-                android:layout_centerVertical="true"
-                android:background="#F0F9F4"
-                android:paddingHorizontal="12dp"
-                android:paddingVertical="4dp"
-                android:text="Mức độ"
-                android:textColor="#22A06B"
-                android:textSize="14sp"
-                android:textStyle="bold" />
+        </LinearLayout>
 
-            <!-- Ngày tháng nằm dưới cùng -->
-            <TextView
-                android:id="@+id/txtHistoryDate"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_below="@id/txtHistoryScore"
-                android:layout_marginTop="8dp"
-                android:text="Ngày test: --"
-                android:textColor="#7B8194"
-                android:textSize="12sp" />
-
-        </RelativeLayout>
-    </androidx.cardview.widget.CardView>
-
-    <TextView
-        android:id="@+id/txtNoData"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="40dp"
-        android:gravity="center"
-        android:text="Không có dữ liệu lịch sử"
-        android:textColor="#7B8194"
-        android:textSize="14sp"
-        android:visibility="gone" />
+    </FrameLayout>
 
 </LinearLayout>

@@ -1,6 +1,7 @@
 package com.example.final_project.data.model;
 
 import com.google.gson.annotations.SerializedName;
+import java.util.List;
 
 public class Account {
 
@@ -12,8 +13,10 @@ public class Account {
     private String level;
     private String lastTestTime;
 
-    // --- BỔ SUNG: 3 đầu điểm chi tiết ---
-    // Sử dụng @SerializedName để đảm bảo khớp với key từ API (nếu Backend trả về kiểu snake_case)
+    // 🔥 FIX: dùng đúng class HistoryItem riêng
+    @SerializedName("history")
+    private List<HistoryItem> history;
+
     @SerializedName("quizScore")
     private int quizScore;
 
@@ -23,74 +26,41 @@ public class Account {
     @SerializedName("faceResult")
     private boolean faceResult;
 
-    // Constructor
+    // =========================
+    // CONSTRUCTOR
+    // =========================
     public Account(String username, String password, String email) {
         this.username = username;
         this.password = password;
         this.email = email;
     }
 
-    // --- GETTER & SETTER MẶC ĐỊNH ---
+    // =========================
+    // GETTER / SETTER
+    // =========================
+    public String getUsername() { return username; }
+    public String getPassword() { return password; }
+    public String getEmail() { return email; }
 
-    public String getUsername() {
-        return username;
-    }
+    public Integer getFinalScore() { return finalScore; }
+    public void setFinalScore(Integer finalScore) { this.finalScore = finalScore; }
 
-    public String getPassword() {
-        return password;
-    }
+    public String getLevel() { return level; }
+    public void setLevel(String level) { this.level = level; }
 
-    public String getEmail() {
-        return email;
-    }
+    public String getLastTestTime() { return lastTestTime; }
+    public void setLastTestTime(String lastTestTime) { this.lastTestTime = lastTestTime; }
 
-    public Integer getFinalScore() {
-        return finalScore;
-    }
+    // 🔥 HISTORY
+    public List<HistoryItem> getHistory() { return history; }
+    public void setHistory(List<HistoryItem> history) { this.history = history; }
 
-    public void setFinalScore(Integer finalScore) {
-        this.finalScore = finalScore;
-    }
+    public int getQuizScore() { return quizScore; }
+    public void setQuizScore(int quizScore) { this.quizScore = quizScore; }
 
-    public String getLevel() {
-        return level;
-    }
+    public int getVoiceResult() { return voiceResult; }
+    public void setVoiceResult(int voiceResult) { this.voiceResult = voiceResult; }
 
-    public void setLevel(String level) {
-        this.level = level;
-    }
-
-    public String getLastTestTime() {
-        return lastTestTime;
-    }
-
-    public void setLastTestTime(String lastTestTime) {
-        this.lastTestTime = lastTestTime;
-    }
-
-    // --- BỔ SUNG: Getter & Setter cho các chỉ số chi tiết ---
-
-    public int getQuizScore() {
-        return quizScore;
-    }
-
-    public void setQuizScore(int quizScore) {
-        this.quizScore = quizScore;
-    }
-
-    public int getVoiceResult() {
-        return voiceResult;
-    }
-
-    public void setVoiceResult(int voiceResult) {
-        this.voiceResult = voiceResult;
-    }
-
-    public boolean isFaceResult() { // Kiểu boolean thường dùng 'is' thay vì 'get'
-        return faceResult;
-    }
-
-    public void setFaceResult(boolean faceResult) {
-        this.faceResult = faceResult;
-    }
+    public boolean isFaceResult() { return faceResult; }
+    public void setFaceResult(boolean faceResult) { this.faceResult = faceResult; }
 }

@@ -23,7 +23,7 @@ public interface ApiService {
     @POST("/change-password")
     Call<ApiResponse> changePassword(@Body Map<String, String> body);
 
-    @GET("/user/{username}")
+    @GET("/get-user/{username}")
     Call<ApiResponse> getUser(@Path("username") String username);
 
     @GET("/questions")

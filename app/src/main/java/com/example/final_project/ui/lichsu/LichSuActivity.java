@@ -1,81 +1,112 @@
 package com.example.final_project.ui.lichsu;
 
-import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
+
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.final_project.R;
+import com.example.final_project.data.model.Account;
+import com.example.final_project.data.model.ApiResponse;
+import com.example.final_project.data.model.HistoryItem;
+import com.example.final_project.data.repository.AccountRepository;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 public class LichSuActivity extends AppCompatActivity {
 
-    // Các biến lưu trữ dữ liệu được truyền từ Trang chủ
-    private int score, detailQuiz, detailVoice;
-    private String level, date;
-    private boolean detailFace;
+    private RecyclerView recyclerView;
+    private TextView txtNoData;
+    private ImageView btnBack;
+
+    private AccountRepository repo;
+    private String username;
+
+    private List<HistoryItem> historyList = new ArrayList<>();
+    private HistoryAdapter adapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_lichsu);
 
-        // 1. Nhận dữ liệu
-        receiveData();
+        recyclerView = findViewById(R.id.recyclerViewHistory);
+        txtNoData = findViewById(R.id.txtNoData);
+        btnBack = findViewById(R.id.btnBack);
 
-        // 2. Thiết lập giao diện
-        setupViews();
+        repo = new AccountRepository();
+        username = getIntent().getStringExtra("username");
+
+        adapter = new HistoryAdapter(historyList);
+        recyclerView.setLayoutManager(new LinearLayoutManager(this));
+        recyclerView.setAdapter(adapter);
+
+        btnBack.setOnClickListener(v -> finish());
+
+        loadHistory();
     }
 
-    private void receiveData() {
-        // Nhận dữ liệu tổng hợp
-        score = getIntent().getIntExtra("history_score", -1);
-        level = getIntent().getStringExtra("history_level");
-        date = getIntent().getStringExtra("history_date");
+    private void loadHistory() {
 
-        // Nhận các đầu điểm chi tiết (để truyền tiếp sang trang Chi Tiết)
-        detailQuiz = getIntent().getIntExtra("detail_quiz", 0);
-        detailVoice = getIntent().getIntExtra("detail_voice", 0);
-        detailFace = getIntent().getBooleanExtra("detail_face", false);
+        if (username == null || username.isEmpty()) {
+            showEmpty();
+            return;
+        }
+
+        repo.getUser(username).enqueue(new Callback<ApiResponse>() {
+
+            @Override
+            public void onResponse(Call<ApiResponse> call, Response<ApiResponse> response) {
+
+                if (!response.isSuccessful() || response.body() == null) {
+                    showEmpty();
+                    return;
+                }
+
+                ApiResponse res = response.body();
+
+                if (!res.isOk() || res.getData() == null) {
+                    showEmpty();
+                    return;
+                }
+
+                Account user = res.getData();
+
+                List<HistoryItem> list = user.getHistory();
+
+                if (list != null && !list.isEmpty()) {
+
+                    historyList.clear();
+                    historyList.addAll(list);
+
+                    adapter.notifyDataSetChanged();
+
+                    recyclerView.setVisibility(View.VISIBLE);
+                    txtNoData.setVisibility(View.GONE);
+
+                } else {
+                    showEmpty();
+                }
+            }
+
+            @Override
+            public void onFailure(Call<ApiResponse> call, Throwable t) {
+                showEmpty();
+            }
+        });
     }
 
-    private void setupViews() {
-        ImageView btnBack = findViewById(R.id.btnBack);
-        TextView txtHistoryScore = findViewById(R.id.txtHistoryScore);
-        TextView txtHistoryLevel = findViewById(R.id.txtHistoryLevel);
-        TextView txtHistoryDate = findViewById(R.id.txtHistoryDate);
-        TextView txtNoData = findViewById(R.id.txtNoData);
-        View cardResult = findViewById(R.id.cardResult);
-
-        // Nếu có điểm (score != -1), hiển thị Card lịch sử
-        if (score != -1) {
-            txtHistoryScore.setText(String.valueOf(score));
-            txtHistoryLevel.setText(level != null ? level : "N/A");
-            txtHistoryDate.setText("Ngày thực hiện: " + (date != null ? date : "--/--/----"));
-
-            cardResult.setVisibility(View.VISIBLE);
-            txtNoData.setVisibility(View.GONE);
-
-            // SỰ KIỆN QUAN TRỌNG: Mở trang Chi Tiết thay vì hiện BottomSheet
-            cardResult.setOnClickListener(v -> {
-                Intent intent = new Intent(LichSuActivity.this, ChiTietLichSuActivity.class);
-                intent.putExtra("total_score", score);
-                intent.putExtra("level", level);
-                intent.putExtra("date", date);
-                intent.putExtra("quiz_score", detailQuiz);
-                intent.putExtra("voice_res", detailVoice);
-                intent.putExtra("face_res", detailFace);
-                startActivity(intent);
-            });
-        } else {
-            // Nếu không có dữ liệu, hiện thông báo trống
-            cardResult.setVisibility(View.GONE);
-            txtNoData.setVisibility(View.VISIBLE);
-        }
-
-        if (btnBack != null) {
-            btnBack.setOnClickListener(v -> finish());
-        }
+    private void showEmpty() {
+        recyclerView.setVisibility(View.GONE);
+        txtNoData.setVisibility(View.VISIBLE);
     }
 }
