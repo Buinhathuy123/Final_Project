@@ -103,59 +103,29 @@ public class TrangChuActivity extends AppCompatActivity {
                     }
                 }
 
-                calculateAndSaveLocalResult();
+                calculateAndSync();
             }
 
             @Override
             public void onFailure(Call<ApiResponse> call, Throwable t) {
-                calculateAndSaveLocalResult();
+                calculateAndSync();
             }
         });
     }
 
     // =========================
-    // FORMAT DATE (FIX CHUẨN)
+    // FORMAT DATE
     // =========================
     private String formatDate(String raw) {
 
         if (raw == null) return "";
 
         try {
-            // ISO format
-            if (raw.contains("T")) {
-                String datePart = raw.split("T")[0];
-                String[] parts = datePart.split("-");
-                return parts[2] + "/" + parts[1] + "/" + parts[0];
-            }
-
-            // Mongo format: Sun May 03 2026 ...
-            String[] parts = raw.split(" ");
-            String day = parts[2];
-            String month = convertMonth(parts[1]);
-            String year = parts[3];
-
-            return day + "/" + month + "/" + year;
-
+            Date date = new Date(raw);
+            SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault());
+            return sdf.format(date);
         } catch (Exception e) {
             return raw;
-        }
-    }
-
-    private String convertMonth(String month) {
-        switch (month) {
-            case "Jan": return "01";
-            case "Feb": return "02";
-            case "Mar": return "03";
-            case "Apr": return "04";
-            case "May": return "05";
-            case "Jun": return "06";
-            case "Jul": return "07";
-            case "Aug": return "08";
-            case "Sep": return "09";
-            case "Oct": return "10";
-            case "Nov": return "11";
-            case "Dec": return "12";
-            default: return "00";
         }
     }
 
@@ -183,19 +153,27 @@ public class TrangChuActivity extends AppCompatActivity {
     }
 
     // =========================
-    // CALCULATE + SYNC
+    // MAIN LOGIC (🔥 FIX CHUẨN)
     // =========================
-    private void calculateAndSaveLocalResult() {
+    private void calculateAndSync() {
 
         boolean completedAll = DataManager.isQuizCompleted(this) &&
                 DataManager.isVoiceCompleted(this) &&
                 DataManager.isFaceCompleted(this);
 
+        // ❗ CHƯA TEST → SHOW SERVER
         if (!completedAll) {
-            txtFinalResult.setText("Chưa có kết quả test");
+
+            if (serverScore != null && serverLevel != null && lastTestTime != null) {
+                showResult(serverScore, serverLevel, formatDate(lastTestTime));
+            } else {
+                txtFinalResult.setText("Chưa có kết quả test");
+            }
+
             return;
         }
 
+        // ================= CALCULATE =================
         double sQuiz = DataManager.getQuizScore(this) / 24.0;
         double sVoice = (DataManager.getVoiceResult(this) == 1) ? 1.0 : 0.0;
         double sFace = DataManager.getFaceResult(this) ? 1.0 : 0.0;
@@ -209,29 +187,31 @@ public class TrangChuActivity extends AppCompatActivity {
         else if (finalScore <= 19) level = "Nặng vừa";
         else level = "Nặng";
 
+        String today = new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
+                .format(new Date());
+
+        String serverDate = formatDate(lastTestTime);
+
         boolean isChanged =
                 serverScore == null ||
                         serverLevel == null ||
                         finalScore != serverScore ||
-                        !level.equals(serverLevel);
+                        !level.equals(serverLevel) ||
+                        !today.equals(serverDate); // 🔥 FIX NGÀY
 
         if (isChanged) {
 
-            // ❗ dùng thời gian mới chỉ khi thay đổi
-            String now = new Date().toString();
-
-            showResult(finalScore, level, formatDate(now));
+            showResult(finalScore, level, today);
 
             saveResultToServer(finalScore, level);
 
             serverScore = finalScore;
             serverLevel = level;
-            lastTestTime = now;
+            lastTestTime = new Date().toString();
 
         } else {
 
-            // ✅ luôn dùng server
-            showResult(serverScore, serverLevel, formatDate(lastTestTime));
+            showResult(serverScore, serverLevel, serverDate);
         }
     }
 
@@ -244,16 +224,11 @@ public class TrangChuActivity extends AppCompatActivity {
         body.put("username", username);
         body.put("finalScore", finalScore);
         body.put("level", level);
-
-        // 🔥 FIX: gửi thời gian hiện tại lên server
         body.put("lastTestTime", new Date().toString());
 
         repo.updateResult(body).enqueue(new Callback<ApiResponse>() {
-            @Override
-            public void onResponse(Call<ApiResponse> call, Response<ApiResponse> response) {}
-
-            @Override
-            public void onFailure(Call<ApiResponse> call, Throwable t) {}
+            @Override public void onResponse(Call<ApiResponse> call, Response<ApiResponse> response) {}
+            @Override public void onFailure(Call<ApiResponse> call, Throwable t) {}
         });
     }
 

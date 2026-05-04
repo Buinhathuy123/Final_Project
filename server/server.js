@@ -33,15 +33,14 @@ const AccountSchema = new mongoose.Schema({
     email: String,
     finalScore: { type: Number, default: null },
     level: { type: String, default: null },
-    lastTestTime: { type: String, default: null }
+    lastTestTime: { type: Date, default: null } // 🔥 FIX: dùng Date
 })
 
 const Account = mongoose.model("accounts", AccountSchema)
 
+
 // ================= REGISTER =================
 app.post("/register", async (req, res) => {
-    console.log("🔥 HIT /register")
-
     try {
         const { username, password, email } = req.body
 
@@ -50,7 +49,6 @@ app.post("/register", async (req, res) => {
         }
 
         const exist = await Account.findOne({ username })
-
         if (exist) {
             return res.json({ ok: false, message: "Username đã tồn tại" })
         }
@@ -65,23 +63,16 @@ app.post("/register", async (req, res) => {
 
         await user.save()
 
-        console.log("✅ REGISTER SUCCESS:", username)
-
-        res.json({
-            ok: true,
-            message: "Đăng ký thành công"
-        })
+        res.json({ ok: true, message: "Đăng ký thành công" })
 
     } catch (err) {
-        console.log("❌ REGISTER ERROR:", err)
         res.json({ ok: false, message: err.message })
     }
 })
 
+
 // ================= LOGIN =================
 app.post("/login", async (req, res) => {
-    console.log("🔥 HIT /login")
-
     try {
         const { username, password } = req.body
 
@@ -108,16 +99,11 @@ app.post("/login", async (req, res) => {
     }
 })
 
-// ================= CHANGE PASSWORD (FORGOT) =================
-app.post("/change-password", async (req, res) => {
-    console.log("🔥 HIT /change-password")
 
+// ================= GET USER (🔥 QUAN TRỌNG) =================
+app.get("/get-user/:username", async (req, res) => {
     try {
-        const { username, newPassword } = req.body
-
-        if (!username || !newPassword) {
-            return res.json({ ok: false, message: "Thiếu dữ liệu" })
-        }
+        const { username } = req.params
 
         const user = await Account.findOne({ username })
 
@@ -125,33 +111,19 @@ app.post("/change-password", async (req, res) => {
             return res.json({ ok: false, message: "User không tồn tại" })
         }
 
-        const isSame = await bcrypt.compare(newPassword, user.password)
-
-        if (isSame) {
-            return res.json({
-                ok: false,
-                message: "Mật khẩu mới không được trùng mật khẩu cũ"
-            })
-        }
-
-        user.password = await bcrypt.hash(newPassword, 10)
-        await user.save()
-
-        console.log("✅ CHANGE PASSWORD SUCCESS:", username)
-
         res.json({
             ok: true,
-            message: "Đổi mật khẩu thành công"
+            data: user
         })
 
     } catch (err) {
         res.json({ ok: false, message: err.message })
     }
 })
+
+
 // ================= UPDATE RESULT =================
 app.post("/update-result", async (req, res) => {
-    console.log("🔥 HIT /update-result")
-
     try {
         const { username, finalScore, level, lastTestTime } = req.body
 
@@ -165,32 +137,57 @@ app.post("/update-result", async (req, res) => {
             return res.json({ ok: false, message: "User không tồn tại" })
         }
 
-        user.finalScore = finalScore
-        user.level = level
+        // 🔥 LOGIC UPDATE CHUẨN
+        let shouldUpdate = false
 
-        // ✅ Ưu tiên dùng time từ client
-        if (lastTestTime) {
-            user.lastTestTime = new Date(lastTestTime)
-        } else {
-            // fallback nếu client không gửi
-            user.lastTestTime = new Date()
+        // lần đầu chưa có
+        if (user.finalScore == null || user.level == null) {
+            shouldUpdate = true
         }
 
-        await user.save()
+        // khác điểm hoặc khác level
+        if (user.finalScore !== finalScore || user.level !== level) {
+            shouldUpdate = true
+        }
+
+        // cùng điểm nhưng khác ngày
+        if (lastTestTime) {
+            const newDate = new Date(lastTestTime)
+            const oldDate = user.lastTestTime
+
+            if (!oldDate ||
+                newDate.toDateString() !== new Date(oldDate).toDateString()) {
+                shouldUpdate = true
+            }
+        }
+
+        if (shouldUpdate) {
+            user.finalScore = finalScore
+            user.level = level
+            user.lastTestTime = lastTestTime
+                ? new Date(lastTestTime)
+                : new Date()
+
+            await user.save()
+        }
 
         res.json({
             ok: true,
-            message: "Cập nhật thành công"
+            message: "Update processed",
+            updated: shouldUpdate
         })
 
     } catch (err) {
         res.json({ ok: false, message: err.message })
     }
 })
+
+
 // ================= TEST =================
 app.get("/", (req, res) => {
     res.send("API RUNNING 🚀")
 })
+
 
 // ================= START =================
 const PORT = process.env.PORT || 3000
