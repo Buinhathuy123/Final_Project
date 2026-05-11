@@ -21,8 +21,12 @@ import com.example.final_project.R;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.text.SimpleDateFormat;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.Date;
+import java.util.List;
 import java.util.Locale;
+import java.util.Random;
 
 public class TrangGhiAmActivity extends AppCompatActivity {
 
@@ -43,17 +47,21 @@ public class TrangGhiAmActivity extends AppCompatActivity {
     private Handler handler = new Handler();
     private long startTime;
 
-    private final String question2 =
-            "Gần đây bạn có gặp khó khăn trong việc đi vào giấc ngủ, ngủ không sâu giấc hoặc ngủ quá nhiều không?";
+    // ================= RANDOM QUESTIONS =================
+    private List<String> questionList;
+
+    private String selectedQuestion;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_manhinhcho_ghiam);
+
         showGuideDialog();
 
         initViews();
-        txtCauHoi.setText(question2);
+
+        loadRandomQuestion();
 
         btnVoice.setOnClickListener(v -> toggleRecording());
 
@@ -65,24 +73,53 @@ public class TrangGhiAmActivity extends AppCompatActivity {
     }
 
     private void initViews() {
+
         txtCauHoi = findViewById(R.id.textcauhoighiam);
         txtThoiGian = findViewById(R.id.textthoigianghiam);
         btnVoice = findViewById(R.id.btnbatdaughiam);
         txtKetQuaNoi = findViewById(R.id.txtKetQuaNoi);
     }
 
+    // ================= LOAD RANDOM QUESTION =================
+    private void loadRandomQuestion() {
+
+        questionList = Arrays.asList(
+
+                "Gần đây bạn có gặp khó khăn trong việc đi vào giấc ngủ, ngủ không sâu giấc hoặc ngủ quá nhiều không?",
+
+                "Trong thời gian gần đây bạn có thường cảm thấy mệt mỏi, thiếu năng lượng hoặc không muốn làm bất kỳ việc gì dù là những việc đơn giản hằng ngày không?",
+
+                "Bạn có thường xuyên cảm thấy lo lắng, áp lực hoặc suy nghĩ quá nhiều về học tập, công việc hay các mối quan hệ xung quanh không?",
+
+                "Gần đây bạn có cảm thấy bản thân dễ buồn bã, chán nản hoặc mất hứng thú với những hoạt động mà trước đây bạn từng yêu thích không?",
+
+                "Bạn có thường cảm thấy khó tập trung khi học tập, làm việc hoặc trò chuyện với người khác vì đầu óc luôn trong trạng thái căng thẳng hay suy nghĩ liên tục không?"
+        );
+
+        Collections.shuffle(questionList);
+
+        selectedQuestion = questionList.get(new Random().nextInt(questionList.size()));
+
+        txtCauHoi.setText(selectedQuestion);
+    }
+
     private void toggleRecording() {
+
         if (!isRecording) startRecording();
         else stopRecording();
     }
 
     private void startRecording() {
+
         int bufferSize = AudioRecord.getMinBufferSize(
-                SAMPLE_RATE, CHANNEL, ENCODING
+                SAMPLE_RATE,
+                CHANNEL,
+                ENCODING
         );
 
         if (ActivityCompat.checkSelfPermission(
-                this, Manifest.permission.RECORD_AUDIO
+                this,
+                Manifest.permission.RECORD_AUDIO
         ) != PackageManager.PERMISSION_GRANTED) return;
 
         audioRecord = new AudioRecord(
@@ -94,29 +131,37 @@ public class TrangGhiAmActivity extends AppCompatActivity {
         );
 
         File dir = new File(getExternalFilesDir(null), "pcm");
+
         if (!dir.exists()) dir.mkdirs();
 
         String time = new SimpleDateFormat(
-                "yyyyMMdd_HHmmss", Locale.getDefault()
+                "yyyyMMdd_HHmmss",
+                Locale.getDefault()
         ).format(new Date());
 
         pcmFile = new File(dir, "answer_" + time + ".pcm");
 
         audioRecord.startRecording();
+
         isRecording = true;
+
         startTime = System.currentTimeMillis();
+
         startTimer();
 
         new Thread(() -> writePCM(bufferSize)).start();
 
         btnVoice.setImageResource(R.drawable.dangghiam);
+
         txtKetQuaNoi.setText("🎙️ Đang ghi âm...");
     }
 
     private void writePCM(int bufferSize) {
+
         byte[] buffer = new byte[bufferSize];
 
         try (FileOutputStream fos = new FileOutputStream(pcmFile)) {
+
             while (isRecording) {
 
                 int read = audioRecord.read(buffer, 0, buffer.length);
@@ -131,7 +176,9 @@ public class TrangGhiAmActivity extends AppCompatActivity {
                     runOnUiThread(this::stopRecording);
                 }
             }
+
         } catch (Exception e) {
+
             Log.e("RECORD_ERROR", "Write PCM lỗi", e);
         }
     }
@@ -143,68 +190,116 @@ public class TrangGhiAmActivity extends AppCompatActivity {
         isRecording = false;
 
         try {
+
             if (audioRecord != null) {
+
                 audioRecord.stop();
                 audioRecord.release();
+
                 audioRecord = null;
             }
+
         } catch (Exception e) {
+
             Log.e("RECORD", "Stop lỗi", e);
         }
 
         stopTimer();
+
         btnVoice.setImageResource(R.drawable.nutghiam);
+
         txtKetQuaNoi.setText("Đã ghi âm xong");
 
         long recordDuration = System.currentTimeMillis() - startTime;
 
         if (recordDuration < MIN_RECORD_TIME * 1000) {
-            Toast.makeText(this, "Vui lòng nói đủ 15 giây", Toast.LENGTH_SHORT).show();
+
+            Toast.makeText(
+                    this,
+                    "Vui lòng nói đủ 15 giây",
+                    Toast.LENGTH_SHORT
+            ).show();
+
             return;
         }
 
         if (pcmFile == null || !pcmFile.exists()) {
-            Toast.makeText(this, "Lỗi file ghi âm", Toast.LENGTH_SHORT).show();
+
+            Toast.makeText(
+                    this,
+                    "Lỗi file ghi âm",
+                    Toast.LENGTH_SHORT
+            ).show();
+
             return;
         }
 
-        Intent intent = new Intent(this, ChoKetQuaGhiAmActivity.class);
+        Intent intent = new Intent(
+                this,
+                ChoKetQuaGhiAmActivity.class
+        );
 
         intent.putExtra("pcmPath", pcmFile.getAbsolutePath());
+
         intent.putExtra("duration", recordDuration);
 
+        intent.putExtra("question", selectedQuestion);
+
         startActivity(intent);
+
         finish();
     }
 
     private void startTimer() {
+
         handler.post(timerRunnable);
     }
+
     private void showGuideDialog() {
-        android.app.AlertDialog.Builder builder = new android.app.AlertDialog.Builder(this);
-        android.view.View view = getLayoutInflater().inflate(R.layout.dialog_luu_y_ghiam, null);
+
+        android.app.AlertDialog.Builder builder =
+                new android.app.AlertDialog.Builder(this);
+
+        android.view.View view =
+                getLayoutInflater().inflate(
+                        R.layout.dialog_luu_y_ghiam,
+                        null
+                );
 
         builder.setView(view);
+
         builder.setCancelable(false);
 
         android.app.AlertDialog dialog = builder.create();
+
         dialog.show();
 
-        view.findViewById(R.id.btnDaHieu).setOnClickListener(v -> dialog.dismiss());
+        view.findViewById(R.id.btnDaHieu)
+                .setOnClickListener(v -> dialog.dismiss());
     }
+
     private void stopTimer() {
+
         handler.removeCallbacks(timerRunnable);
+
         txtThoiGian.setText("00:00");
     }
 
     private final Runnable timerRunnable = new Runnable() {
+
         @Override
         public void run() {
-            long sec = (System.currentTimeMillis() - startTime) / 1000;
+
+            long sec =
+                    (System.currentTimeMillis() - startTime) / 1000;
 
             txtThoiGian.setText(
-                    String.format(Locale.getDefault(),
-                            "%02d:%02d", sec / 60, sec % 60)
+                    String.format(
+                            Locale.getDefault(),
+                            "%02d:%02d",
+                            sec / 60,
+                            sec % 60
+                    )
             );
 
             handler.postDelayed(this, 1000);

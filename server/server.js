@@ -200,7 +200,54 @@ app.post("/update-result", async (req, res) => {
     }
 })
 
+// ================= CHANGE PASSWORD =================
+app.post("/change-password", async (req, res) => {
+    try {
 
+        const { username, email, newPassword } = req.body
+
+        // validate
+        if (!username || !email || !newPassword) {
+            return res.json({
+                ok: false,
+                message: "Thiếu dữ liệu"
+            })
+        }
+
+        // tìm user
+        const user = await Account.findOne({
+            username: username,
+            email: email
+        })
+
+        if (!user) {
+            return res.json({
+                ok: false,
+                message: "Username hoặc email không đúng"
+            })
+        }
+
+        // hash password mới
+        const hashed = await bcrypt.hash(newPassword, 10)
+
+        // update
+        user.password = hashed
+
+        await user.save()
+
+        res.json({
+            ok: true,
+            message: "Đổi mật khẩu thành công"
+        })
+
+    } catch (err) {
+
+        res.json({
+            ok: false,
+            message: err.message
+        })
+    }
+})
 // ================= TEST =================
 app.get("/", (req, res) => {
     res.send("API RUNNING 🚀")
